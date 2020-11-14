@@ -11,6 +11,8 @@
 		<Button x:Name="bt_StartCapturing" MinHeight="200" MinWidth="200"
         Command="{Binding StartCapturing}"
         >
-        Start Capturing</Button>
-    </Grid>
+			Start Capturing
+		</Button>
+
+	</Grid>
 </Window>
