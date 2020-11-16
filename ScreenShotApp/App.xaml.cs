@@ -1,4 +1,5 @@
-﻿using ScreenShotApp.ViewModels;
+﻿using ScreenShotApp.Utils;
+using ScreenShotApp.ViewModels;
 using System;
 using System.Collections.Generic;
 using System.Configuration;
@@ -26,7 +27,15 @@ namespace ScreenShotApp
 			startUpWindow.Loaded += Root.StartUpWindowViewModel.OnWindowLoaded;
 			startUpWindow.Closed += Root.StartUpWindowViewModel.OnWindowClosed;
 			startUpWindow.Show();
+			LogSystemShared.LogWriter.WriteLine("App on startup called.");
 		}
-
+		protected override void OnExit(ExitEventArgs e)
+		{
+			base.OnExit(e);
+			// save usersettings when exit
+			UserSettingsManager.Instance.SaveAll();
+			LogSystemShared.LogWriter.WriteLine("App on exit called.");
+			LogSystemShared.LogWriter.PurgeAll();
+		}
 	}
 }

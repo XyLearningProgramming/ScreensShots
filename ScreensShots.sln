@@ -7,7 +7,17 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ScreenShotApp", "ScreenShot
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ScreenShotWindows", "ScreenShotWindows\ScreenShotWindows.csproj", "{D196AC94-0A66-4885-BF9A-EB63304B8895}"
 EndProject
+Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "UserSettingsStruct", "UserSettingsStruct\UserSettingsStruct.shproj", "{9EF92519-77E8-4911-902F-3A18DE692DEB}"
+EndProject
+Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "LogSystemShared", "LogSystemShared\LogSystemShared.shproj", "{B3AE7AC9-2340-45EF-846D-0230045D26C3}"
+EndProject
 Global
+	GlobalSection(SharedMSBuildProjectFiles) = preSolution
+		UserSettingsStruct\UserSettingsStruct.projitems*{9ef92519-77e8-4911-902f-3a18de692deb}*SharedItemsImports = 13
+		LogSystemShared\LogSystemShared.projitems*{b3ae7ac9-2340-45ef-846d-0230045d26c3}*SharedItemsImports = 13
+		LogSystemShared\LogSystemShared.projitems*{d196ac94-0a66-4885-bf9a-eb63304b8895}*SharedItemsImports = 5
+		UserSettingsStruct\UserSettingsStruct.projitems*{d196ac94-0a66-4885-bf9a-eb63304b8895}*SharedItemsImports = 5
+	EndGlobalSection
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
 		Release|Any CPU = Release|Any CPU

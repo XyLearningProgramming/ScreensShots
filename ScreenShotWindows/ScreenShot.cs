@@ -1,4 +1,5 @@
-﻿using System;
+﻿using UserSettingsStruct;
+using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Windows;
@@ -19,9 +20,9 @@ namespace ScreenShotWindows
 	/// </summary>
 	public class ScreenShot
 	{
-		public void Start(WindowsCaptureScreenTarget screenTarget, WindowsCaptureMode captureMode)
+		public void Start(WindowsCaptureScreenTarget screenTarget, WindowsCaptureMode captureMode, UserSettingsForScreenShotWindows userSettings)
 		{
-			new ScreensShotWindows(this, screenTarget, captureMode).Show();
+			new ScreensShotWindows(this, screenTarget, captureMode, userSettings).Show();
 		}
 
 		public static event EventHandler<FunctionEventArgs<ImageSource[]>> Snapped;

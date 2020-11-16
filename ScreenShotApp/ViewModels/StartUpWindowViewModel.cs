@@ -1,10 +1,12 @@
-﻿using ScreenShotApp.MVVMUtils;
+﻿using ScreenShotApp.Utils;
+using ScreenShotApp.MVVMUtils;
 using ScreenShotWindows;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Text;
 using System.Windows;
+using UserSettingsStruct;
 
 namespace ScreenShotApp.ViewModels
 {
@@ -12,8 +14,9 @@ namespace ScreenShotApp.ViewModels
 	{
 		public event PropertyChangedEventHandler PropertyChanged;
 		#region fields
-		RootViewModel Root;
+		private RootViewModel Root;
 		private bool isCapturing = false;
+		private UserSettingsForScreenShotWindows userSettings;
 		#endregion
 
 		#region properties
@@ -22,6 +25,8 @@ namespace ScreenShotApp.ViewModels
 		public StartUpWindowViewModel(RootViewModel rootViewModel)
 		{
 			this.Root = rootViewModel;
+			// TODO adjust this via config file & system
+			userSettings = new UserSettingsForScreenShotWindows() { IsShowingReferenceLine = UserSettingsManager.Instance.IsShowingReferenceLine };
 		}
 
 		#region public functions
@@ -47,7 +52,7 @@ namespace ScreenShotApp.ViewModels
 					{
 						isCapturing = true;
 						MessageBox.Show("CommandExecuted");
-						new ScreenShot().Start(WindowsCaptureScreenTarget.MainScreen, WindowsCaptureMode.Frame);
+						new ScreenShot().Start(WindowsCaptureScreenTarget.MainScreen, WindowsCaptureMode.Frame, userSettings);
 					},
 				// not allowing multiple capture at the same time
 				(_)=>{ return !this.isCapturing; }

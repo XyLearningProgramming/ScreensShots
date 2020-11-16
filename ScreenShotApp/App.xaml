@@ -12,6 +12,9 @@
 					<vm:RootViewModel x:Key="RootViewModel"></vm:RootViewModel>
 
 				</ResourceDictionary>
+				<!--Load styles from shared project-->
+				<ResourceDictionary Source="pack://application:,,,/ScreenShotWindows;component/Themes/Generic.xaml">
+				</ResourceDictionary>
 			</ResourceDictionary.MergedDictionaries>
 		</ResourceDictionary>
     </Application.Resources>

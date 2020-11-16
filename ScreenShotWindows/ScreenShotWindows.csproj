@@ -5,4 +5,8 @@
     <UseWPF>true</UseWPF>
   </PropertyGroup>
 
+  <Import Project="..\UserSettingsStruct\UserSettingsStruct.projitems" Label="Shared" />
+
+  <Import Project="..\LogSystemShared\LogSystemShared.projitems" Label="Shared" />
+
 </Project>

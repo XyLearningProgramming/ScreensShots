@@ -7,12 +7,11 @@
         mc:Ignorable="d"
         Title="MainWindow" 
         SizeToContent="WidthAndHeight">
-    <Grid>
+	<Grid>
 		<Button x:Name="bt_StartCapturing" MinHeight="200" MinWidth="200"
         Command="{Binding StartCapturing}"
         >
 			Start Capturing
 		</Button>
-
 	</Grid>
 </Window>
