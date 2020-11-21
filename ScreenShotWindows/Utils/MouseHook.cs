@@ -46,19 +46,15 @@ namespace ScreenShotWindows.Utils
         /// <returns></returns>
         private static IntPtr SetHook(Interop.InteropStructs.HookProc proc)
 		{
-            using(Process currentProcess = Process.GetCurrentProcess())
+            using Process currentProcess = Process.GetCurrentProcess();
+            using ProcessModule currentPM = currentProcess.MainModule;
+			if(currentPM != null)
 			{
-                using(ProcessModule currentPM = currentProcess.MainModule)
-				{
-					if(currentPM != null)
-					{
-                        LogSystemShared.LogWriter.WriteLine("Mouse hooked successfully.");
-                        return Interop.InteropMethods.SetWindowsHookEx_((int)Interop.InteropStructs.HookType.MOUSE_LL, proc, Interop.InteropMethods.GetModuleHandle_(currentPM.ModuleName), 0);
-					}
-                    LogSystemShared.LogWriter.WriteLine("Trying to hook mouse but unable to find current module.", title: "Unable to find module.");
-                    return IntPtr.Zero;
-				}
+                LogSystemShared.LogWriter.WriteLine("Mouse hooked successfully.");
+                return Interop.InteropMethods.SetWindowsHookEx_((int)Interop.InteropStructs.HookType.MOUSE_LL, proc, Interop.InteropMethods.GetModuleHandle_(currentPM.ModuleName), 0);
 			}
+            LogSystemShared.LogWriter.WriteLine("Trying to hook mouse but unable to find current module.", title: "Unable to find module.");
+            return IntPtr.Zero;
 		}
 
         private static IntPtr HookCallback(int nCode, IntPtr wParam, IntPtr lParam)

@@ -20,6 +20,10 @@ namespace ScreenShotApp
 
 		protected override void OnStartup(StartupEventArgs e)
 		{
+			LogSystemShared.LogWriter.WriteLine(Environment.NewLine,verbose: false);
+			LogSystemShared.LogWriter.WriteLine("App started", verbose: false);
+			LogSystemShared.LogWriter.WriteLine(Environment.NewLine, verbose: false);
+
 			base.OnStartup(e);
 			// default: start from the startup window with button
 			StartUpWindow startUpWindow = new StartUpWindow();
@@ -27,6 +31,9 @@ namespace ScreenShotApp
 			startUpWindow.Loaded += Root.StartUpWindowViewModel.OnWindowLoaded;
 			startUpWindow.Closed += Root.StartUpWindowViewModel.OnWindowClosed;
 			startUpWindow.Show();
+
+			TestStart testWindow = new TestStart();
+			testWindow.Show();
 			LogSystemShared.LogWriter.WriteLine("App on startup called.");
 		}
 		protected override void OnExit(ExitEventArgs e)

@@ -22,7 +22,12 @@ namespace ScreenShotWindows
 	{
 		public void Start(WindowsCaptureScreenTarget screenTarget, WindowsCaptureMode captureMode, UserSettingsForScreenShotWindows userSettings)
 		{
-			new ScreensShotWindows(this, screenTarget, captureMode, userSettings).Show();
+			if(screenTarget != WindowsCaptureScreenTarget.AllScreens)
+				new ScreensShotWindows(this, screenTarget, captureMode, userSettings).Show();
+			else // TODO
+			{ 
+			
+			}
 		}
 
 		public static event EventHandler<FunctionEventArgs<ImageSource[]>> Snapped;

@@ -1,0 +1,26 @@
+﻿<Window x:Class="ScreenShotApp.TestStart"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:ScreenShotApp"
+        mc:Ignorable="d"
+        Title="TestStart" Height="450" Width="800"
+        ContentRendered="Window_ContentRendered">
+	<Grid>
+		<Grid.RowDefinitions>
+			<RowDefinition Height="Auto"></RowDefinition>
+			<RowDefinition Height="Auto"></RowDefinition>
+			<RowDefinition Height="Auto"></RowDefinition>
+        </Grid.RowDefinitions>
+		<TextBlock Text="{Binding MousePos}"></TextBlock>
+		<ScrollViewer x:Name="sv_tb">
+		<TextBlock Text="{Binding Showing}" TextWrapping="WrapWithOverflow" Grid.Row="1"></TextBlock>
+		</ScrollViewer>
+		<Border BorderBrush="Black" BorderThickness="2" Margin="0,5,5,0" MaxWidth="100" HorizontalAlignment="Right">
+			<StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+				<TextBlock HorizontalAlignment="Right">Here</TextBlock>
+			</StackPanel>
+		</Border>
+	</Grid>
+</Window>

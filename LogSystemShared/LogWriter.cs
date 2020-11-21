@@ -14,12 +14,15 @@ namespace LogSystemShared
 {
 	public static class LogWriter
 	{
+		static LogWriter()
+		{
+			LogConsumer.Init();
+		}
 		public static void WriteLine(string message, string title="", bool verbose = true,
 			[CallerMemberName] string memberName = "", 
 			[CallerFilePath] string sourceFilePath = "",
 			[CallerLineNumber] int sourceLineNumber = 0)
 		{
-			LogConsumer.Init();
 			MessageQueue<LogMessage> messageQueue = MessageQueue<LogMessage>.FindOrCreate(Constants.MessageQueueName);
 			LogMessage logMessage = new LogMessage(message, title, verbose, memberName, sourceFilePath, sourceLineNumber);
 			messageQueue.Send(logMessage);

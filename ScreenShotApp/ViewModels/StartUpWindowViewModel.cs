@@ -7,6 +7,7 @@ using System.ComponentModel;
 using System.Text;
 using System.Windows;
 using UserSettingsStruct;
+using System.Linq;
 
 namespace ScreenShotApp.ViewModels
 {
@@ -51,7 +52,7 @@ namespace ScreenShotApp.ViewModels
 					(_) => 
 					{
 						isCapturing = true;
-						MessageBox.Show("CommandExecuted");
+						//MessageBox.Show("CommandExecuted");
 						new ScreenShot().Start(WindowsCaptureScreenTarget.MainScreen, WindowsCaptureMode.Frame, userSettings);
 					},
 				// not allowing multiple capture at the same time
