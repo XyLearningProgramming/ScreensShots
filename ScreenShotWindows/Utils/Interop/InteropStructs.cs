@@ -18,6 +18,20 @@ namespace ScreenShotWindows.Utils.Interop
 			{
 				X = x; Y = y;
 			}
+            public POINT(System.Windows.Point pt)
+			{
+                this.X = (int) pt.X;
+                this.Y = (int) pt.Y;
+			}
+
+			public override bool Equals(object obj)
+			{
+                return (obj is POINT pt) && (pt.X, pt.Y) == (X, Y);
+			}
+			public override int GetHashCode()
+			{
+                return (X, Y).GetHashCode();
+			}
 		}
 
 		/// <summary>

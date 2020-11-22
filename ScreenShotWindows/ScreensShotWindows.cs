@@ -19,6 +19,8 @@ using UserSettingsStruct;
 
 namespace ScreenShotWindows
 {
+	public enum ScreenShotWindowStatus {Empty,IsDrawing,IsSelecting }
+
 	/// <summary>
 	/// Window that captures screen through user32.dll
 	/// </summary>
@@ -27,6 +29,7 @@ namespace ScreenShotWindows
 	[TemplatePart(Name = ElementMaskAreaTop, Type = typeof(FrameworkElement))]
 	[TemplatePart(Name = ElementMaskAreaRight, Type = typeof(FrameworkElement))]
 	[TemplatePart(Name = ElementMaskAreaBottom, Type = typeof(FrameworkElement))]
+	[TemplatePart(Name = ElementStackedButtons, Type = typeof(StackPanel))]
 	[TemplatePart(Name = ElementTargetArea, Type = typeof(InkCanvas))]
 	[TemplatePart(Name = ElementMagnifier, Type = typeof(FrameworkElement))]
 	[TemplatePart(Name = ElementHintGrid, Type = typeof(GridWithSolidLines))]
@@ -34,6 +37,7 @@ namespace ScreenShotWindows
 	{
 		#region fields
 		private static readonly Guid BmpGuid = new Guid("{b96b3cab-0728-11d3-9d7b-0000f81ef32e}"); // do not change a bit
+
 		private IntPtr _desktopWindowHandler = IntPtr.Zero;
 		private InteropStructs.RECT _desktopWindowRect;
 
@@ -46,6 +50,8 @@ namespace ScreenShotWindows
 		private Style _referenceRectStyle;
 		private HashSet<Rectangle> _referenceRectsInContainer;
 		private bool _saveScreenShots = false;
+		private Point _firstMouseLClickRelativePosition = new Point(0,0);
+		private const int _mouseMoveLegalThreshold = 3;
 
 		private const string ElementCanvas = "PART_Canvas";
 		private const string ElementMaskAreaLeft = "PART_MaskAreaLeft";
@@ -55,6 +61,7 @@ namespace ScreenShotWindows
 		private const string ElementTargetArea = "PART_TargetArea";
 		private const string ElementMagnifier = "PART_Magnifier";
 		private const string ElementHintGrid = "PART_HintGrid";
+		private const string ElementStackedButtons = "PART_StackedButtons";
 		private readonly string ScreenShotWindowStyleString = "ScreenShotWindowStyle";
 		#endregion
 
@@ -71,21 +78,29 @@ namespace ScreenShotWindows
 
 		internal FrameworkElement Magnifier { get; set; }
 
+		internal StackPanel StackedButtons { get; set; }
+
 		internal GridWithSolidLines HintGrid { get; set; }
+
 
 		public ScreenShotWindowsCommands ScreenShotWindowsCommands { get; set; }
 		public IntPtr DesktopWindowHandler { get => _desktopWindowHandler; }
 		public InteropStructs.RECT DesktopWindowRect { get => _desktopWindowRect; }
 		public VisualBrush MagnifierPreviewVisualBrush { get; private set; }
-		public Dictionary<IntPtr, InteropStructs.RECT> AllWinHandlers { get; set; } = new Dictionary<IntPtr, InteropStructs.RECT>();
+		public InteropStructs.POINT MagnifierOffset { get; private set; } = new InteropStructs.POINT(5, 25);
+		public List<Tuple<IntPtr, InteropStructs.RECT>> AllWinHandlers { get; set; } = new List<Tuple<IntPtr, InteropStructs.RECT>>();
+
+		public InteropStructs.RECT TargetAreaRECT {get=> new InteropStructs.RECT((int)TargetArea.Margin.Left, (int)TargetArea.Margin.Top, (int)TargetArea.Margin.Right + (int)TargetArea.Width, (int)TargetArea.Margin.Top + (int)TargetArea.Height); }
 		#endregion
 
 		#region dependency properties
-		public static readonly DependencyProperty IsSelectingProperty = DependencyProperty.Register("IsSelecting", typeof(bool), typeof(ScreensShotWindows), new PropertyMetadata(false));
-		public bool IsSelecting { get => (bool)GetValue(IsSelectingProperty); set => SetValue(IsSelectingProperty, value); }
-		public static readonly DependencyProperty IsDrawingProperty = DependencyProperty.Register("IsDrawing", typeof(bool), typeof(ScreensShotWindows), new PropertyMetadata(false));
-		public bool IsDrawing { get => (bool)GetValue(IsDrawingProperty); set => SetValue(IsDrawingProperty, value); }
-
+		//public static readonly DependencyProperty IsSelectingProperty = DependencyProperty.Register("IsSelecting", typeof(bool), typeof(ScreensShotWindows), new PropertyMetadata(false));
+		//public bool IsSelecting { get => (bool)GetValue(IsSelectingProperty); set => SetValue(IsSelectingProperty, value); }
+		//public static readonly DependencyProperty IsDrawingProperty = DependencyProperty.Register("IsDrawing", typeof(bool), typeof(ScreensShotWindows), new PropertyMetadata(false));
+		//public bool IsDrawing { get => (bool)GetValue(IsDrawingProperty); set => SetValue(IsDrawingProperty, value); }
+		public static readonly DependencyPropertyKey WindowStatusPropertyKey = DependencyProperty.RegisterReadOnly("WindowStatus", typeof(ScreenShotWindowStatus), typeof(ScreensShotWindows), new PropertyMetadata(ScreenShotWindowStatus.Empty, ScreenShotWindowStatusChangedCallback)); // default value as null
+		public static readonly DependencyProperty WindowStatusProperty = WindowStatusPropertyKey.DependencyProperty;
+		public ScreenShotWindowStatus WindowStatus { get => (ScreenShotWindowStatus)GetValue(WindowStatusProperty); set => SetValue(WindowStatusPropertyKey, value); }
 
 		// previewbrush as read-only property for magnifier inner border background
 		// it is a reflection of desktop first captured by an inkcanvas component with transparent background
@@ -95,16 +110,19 @@ namespace ScreenShotWindows
 		public Brush PreviewBrush { get => (Brush)GetValue(PreviewBrushProperty); private set => SetValue(PreviewBrushPropertyKey, value); }
 
 		//record size of screenshot
-		public static readonly DependencyProperty SizeProperty = DependencyProperty.Register("Size", typeof(Size), typeof(ScreensShotWindows), new PropertyMetadata(Size.Empty));
-		public Size Size { get => (Size)GetValue(SizeProperty); set => SetValue(SizeProperty, value); }
+		public static readonly DependencyProperty TargetAreaSizeProperty = DependencyProperty.Register("TargetAreaSize", typeof(Size), typeof(ScreensShotWindows), new PropertyMetadata(Size.Empty));
+		public Size TargetAreaSize { get => (Size)GetValue(TargetAreaSizeProperty); set => SetValue(TargetAreaSizeProperty, value); }
 
 		//magnifier size
 		public static readonly DependencyProperty MagnifierViewBoxSizeProperty = DependencyProperty.Register("MagnifierViewBoxSize", typeof(Size), typeof(ScreensShotWindows), new PropertyMetadata(Size.Empty));
 		public Size MagnifierViewBoxSize { get => (Size)GetValue(MagnifierViewBoxSizeProperty); set => SetValue(MagnifierViewBoxSizeProperty, value); }
 
-		//show what size the selected area is on top left of window
-		public static readonly DependencyProperty SizeHintStrProperty = DependencyProperty.Register("SizeHintStr", typeof(string), typeof(ScreensShotWindows), new PropertyMetadata("0 x 0"));
-		public string SizeHintStr { get => (string)GetValue(SizeHintStrProperty); set => SetValue(SizeHintStrProperty, value); }
+		////show what size the selected area is on top left of window
+		//public static readonly DependencyProperty SizeHintStrProperty = DependencyProperty.Register("SizeHintStr", typeof(string), typeof(ScreensShotWindows), new PropertyMetadata("0 x 0"));
+		//public string SizeHintStr { get => (string)GetValue(SizeHintStrProperty); set => SetValue(SizeHintStrProperty, value); } 
+		public static readonly DependencyPropertyKey MagnifierHintTextPropertyKey = DependencyProperty.RegisterReadOnly("MagnifierHintText", typeof(string), typeof(ScreensShotWindows), new PropertyMetadata("POS: (1000,1000) RGB: (255,255,255)"));
+		public static readonly DependencyProperty MagnifierHintTextProperty = MagnifierHintTextPropertyKey.DependencyProperty;
+		public string MagnifierHintText { get => (string)GetValue(MagnifierHintTextProperty); set => SetValue(MagnifierHintTextPropertyKey, value); }
 
 		public static readonly DependencyProperty IsPreviewShowingReferenceLinesProperty = DependencyProperty.Register("IsPreviewShowingReferenceLines", typeof(bool), typeof(ScreensShotWindows), new PropertyMetadata(false, OnIsShowingReferenceLinesCallback));
 		public bool IsPreviewShowingReferenceLines { get => (bool)GetValue(IsPreviewShowingReferenceLinesProperty); set => SetValue(IsPreviewShowingReferenceLinesProperty, value); }
@@ -147,10 +165,10 @@ namespace ScreenShotWindows
 			InteropMethods.EnumWindows_((IntPtr wnd, IntPtr param) =>
 			{
 				IntPtr thisWindowHandler = new WindowInteropHelper(this).Handle;
-				if(InteropMethods.IsWindowVisible_(wnd) && wnd!=thisWindowHandler)
+				if(InteropMethods.IsWindowVisible_(wnd) && InteropMethods.IsWindowEnabled_(wnd) && wnd!=thisWindowHandler)
 				{
 					InteropMethods.GetWindowRect_(wnd, out InteropStructs.RECT rect);
-					AllWinHandlers.Add(wnd,rect);
+					AllWinHandlers.Add(new Tuple<IntPtr, InteropStructs.RECT>( wnd, rect ));
 				}
 				return true;
 			}, IntPtr.Zero);
@@ -172,6 +190,7 @@ namespace ScreenShotWindows
 			MaskAreaBottom = GetTemplateChild(ElementMaskAreaBottom) as FrameworkElement;
 			TargetArea = GetTemplateChild(ElementTargetArea) as FrameworkElement;
 			Magnifier = GetTemplateChild(ElementMagnifier) as FrameworkElement;
+			StackedButtons = GetTemplateChild(ElementStackedButtons) as StackPanel;
 			HintGrid = GetTemplateChild(ElementHintGrid) as GridWithSolidLines;
 			GenerateReferenceDotsLines(HintGrid, _userSettings.IsShowingReferenceLine);
 			IsPreviewShowingReferenceLines = _userSettings.IsShowingReferenceLine;
@@ -180,8 +199,6 @@ namespace ScreenShotWindows
 			{
 				MagnifierViewBoxSize = new Size(30, 30); // 121 121
 			}
-
-			Magnifier.Visibility = Visibility.Visible;
 
 		}
 
@@ -206,7 +223,7 @@ namespace ScreenShotWindows
 				ScreenShotWindowsCommands.MoveCommand.Execute(param);
 			}
 			// magnifier param settings
-			MoveMagnifierCommandParameter magParam = new MoveMagnifierCommandParameter() { targetElement = TargetArea, targetPoint = mousePoint, Offset = new InteropStructs.POINT(5, 25), ViewboxSize = MagnifierViewBoxSize };
+			MoveMagnifierCommandParameter magParam = new MoveMagnifierCommandParameter() { targetElement = TargetArea, targetPoint = mousePoint, Offset = MagnifierOffset, ViewboxSize = MagnifierViewBoxSize };
 			if(ScreenShotWindowsCommands.MoveCommand.CanExecute(magParam))
 			{
 				ScreenShotWindowsCommands.MoveCommand.Execute(magParam);
@@ -241,6 +258,14 @@ namespace ScreenShotWindows
 				window.GenerateReferenceDotsLines(window.HintGrid, (bool)args.NewValue);
 			}
 		}
+
+		private static void ScreenShotWindowStatusChangedCallback(DependencyObject d, DependencyPropertyChangedEventArgs args)
+		{
+			if(d is ScreensShotWindows window && args.NewValue != args.OldValue)
+			{
+				// all controls' behavior respond to this change
+			}
+		}
 		private void GenerateReferenceDotsLines(Grid container, bool IsShowingReferenceLine = false)
 		{
 			Debug.Assert(container != null);
@@ -259,8 +284,9 @@ namespace ScreenShotWindows
 					// first line
 					Rectangle rect = new Rectangle() { HorizontalAlignment = HorizontalAlignment.Left, VerticalAlignment = VerticalAlignment.Top };
 					rect.Style = _referenceRectStyle;
+					Debug.Assert(_referenceRectStyle!=null);
 					rect.SetValue(Grid.ColumnProperty, col);
-					rect.SetValue(Grid.RowProperty, 0);
+					rect.SetValue(Grid.RowProperty, 0); 
 					_referenceRectsInContainer.Add(rect);
 					container.Children.Add(rect);
 
@@ -317,6 +343,15 @@ namespace ScreenShotWindows
 						if(horizontalAlignment == HorizontalAlignment.Center && verticalAlignment == VerticalAlignment.Center) continue;
 
 						Rectangle rect = new Rectangle() { HorizontalAlignment = horizontalAlignment, VerticalAlignment = verticalAlignment, Margin = new Thickness(horizontalAlignment == HorizontalAlignment.Left ? -3 : 0, verticalAlignment == VerticalAlignment.Top ? -3 : 0, horizontalAlignment == HorizontalAlignment.Right ? -3 : 0, verticalAlignment == VerticalAlignment.Bottom ? -3 : 0) };
+						// set grid 
+						if(verticalAlignment == VerticalAlignment.Center)
+							Grid.SetRow(rect, 1);
+						if(verticalAlignment == VerticalAlignment.Bottom)
+							Grid.SetRow(rect, 2);
+						if(horizontalAlignment == HorizontalAlignment.Center)
+							Grid.SetColumn(rect, 1);
+						if(horizontalAlignment == HorizontalAlignment.Right)
+							Grid.SetColumn(rect, 2);
 						rect.Style = _referenceRectStyle;
 						_referenceRectsInContainer.Add(rect);
 						container.Children.Add(rect);
@@ -340,26 +375,123 @@ namespace ScreenShotWindows
 		protected override void OnPreviewMouseLeftButtonUp(MouseButtonEventArgs e)
 		{
 			base.OnPreviewMouseLeftButtonUp(e);
+			if(WindowStatus == ScreenShotWindowStatus.IsDrawing)
+			{
+				WindowStatus = ScreenShotWindowStatus.IsSelecting;
+				e.Handled = true;
+			}
 		}
 		protected override void OnPreviewMouseLeftButtonDown(MouseButtonEventArgs e)
 		{
 			base.OnPreviewMouseLeftButtonDown(e);
+			if(WindowStatus == ScreenShotWindowStatus.Empty)
+			{
+				WindowStatus = ScreenShotWindowStatus.IsDrawing;
+				_firstMouseLClickRelativePosition = e.GetPosition(this);
+				e.Handled = true;
+				return;
+			}
 		}
 		protected override void OnPreviewMouseDoubleClick(MouseButtonEventArgs e)
 		{
 			base.OnPreviewMouseDoubleClick(e);
+			if(e.ChangedButton == MouseButton.Left)
+			{
+				if(WindowStatus == ScreenShotWindowStatus.Empty)
+				{
+					WindowStatus = ScreenShotWindowStatus.IsSelecting; // select the snapped window
+					e.Handled = true;
+					return;
+				}
+				else if(WindowStatus == ScreenShotWindowStatus.IsSelecting)
+				{
+					//TODO: save the image
+
+					this.Close();
+					e.Handled = true;
+					return;
+				}
+			}
+			else if(e.ChangedButton == MouseButton.Right)
+			{
+				// double right click means quit
+				if(WindowStatus != ScreenShotWindowStatus.IsDrawing)
+				{
+					this.Close();
+					e.Handled = true;
+					return;
+				}
+			}
 		}
+
 		protected override void OnPreviewMouseMove(MouseEventArgs e)
 		{
 			base.OnPreviewMouseMove(e);
+			if(WindowStatus == ScreenShotWindowStatus.Empty)
+			{
+				// snap target area & move magnifier
+				MoveCommandParameter targetAreaMoveParam = new MoveCommandParameter() { targetElement=TargetArea, targetPoint = new InteropStructs.POINT(this.PointToScreen(e.GetPosition(this))) };
+				ScreenShotWindowsCommands.MoveCommand.TryExecute(targetAreaMoveParam);
+				MoveMagnifierCommandParameter magnifierParam = new MoveMagnifierCommandParameter() { targetElement = Magnifier, targetPoint = targetAreaMoveParam.targetPoint, ViewboxSize = this.MagnifierViewBoxSize, Offset = MagnifierOffset };
+				ScreenShotWindowsCommands.MoveCommand.TryExecute(magnifierParam);
+
+				e.Handled = true;
+			}
+			else if(WindowStatus == ScreenShotWindowStatus.IsDrawing && e.LeftButton== MouseButtonState.Pressed)
+			{
+				Point mousePos = e.GetPosition(this);
+				Vector distance = mousePos - _firstMouseLClickRelativePosition;
+				if(Math.Abs(distance.X) <= _mouseMoveLegalThreshold && Math.Abs(distance.Y) <= _mouseMoveLegalThreshold)
+				{
+					// too small move not update anything 
+					return;
+				}
+				// update target area 
+				InteropStructs.RECT rect = new InteropStructs.RECT(0,0,0,0);
+				rect.Left = Math.Min((int)_firstMouseLClickRelativePosition.X, (int)mousePos.Y);
+				rect.Top = Math.Min((int)_firstMouseLClickRelativePosition.Y, (int)mousePos.Y);
+				rect.Right = Math.Max((int)_firstMouseLClickRelativePosition.X, (int)mousePos.Y);
+				rect.Bottom = Math.Max((int)_firstMouseLClickRelativePosition.Y, (int)mousePos.Y);
+
+				ReSizeTargetAreaCommandParameter reparam = new ReSizeTargetAreaCommandParameter() { TargetRect = rect };
+				ScreenShotWindowsCommands.ResizeTargetAreaCommand.TryExecute(reparam);
+
+				MoveMagnifierCommandParameter magnifierParam = new MoveMagnifierCommandParameter() { targetElement = Magnifier, targetPoint = new InteropStructs.POINT(mousePos), ViewboxSize = this.MagnifierViewBoxSize, Offset = MagnifierOffset };
+				ScreenShotWindowsCommands.MoveCommand.TryExecute(magnifierParam);
+
+				e.Handled = true;
+			}
+			else if(WindowStatus== ScreenShotWindowStatus.IsSelecting)
+			{
+				// TODO: mouse cursor update not correct
+				ScreenShotWindowsCommands.UpdateMouseCursorCommand.TryExecute(new UpdateMouseCurosrCommandParameter() { MouoseGlobalPoint= new InteropStructs.POINT(this.PointToScreen(e.GetPosition(this))), SnapLength=_mouseMoveLegalThreshold });
+				// is selecting respond to: mouse & key board move
+				// mouse move if around target area means drag
+
+			}
+		}
+
+		protected override void OnPreviewMouseRightButtonUp(MouseButtonEventArgs e)
+		{
+			base.OnPreviewMouseRightButtonUp(e);
+			if(WindowStatus== ScreenShotWindowStatus.Empty)
+			{
+				this.Close();
+				e.Handled = true;
+			}else if(WindowStatus == ScreenShotWindowStatus.IsSelecting)
+			{
+				WindowStatus = ScreenShotWindowStatus.Empty;
+				// snap target area & move magnifier
+				MoveCommandParameter targetAreaMoveParam = new MoveCommandParameter() { targetElement = TargetArea, targetPoint = new InteropStructs.POINT(this.PointToScreen(e.GetPosition(this))) };
+				ScreenShotWindowsCommands.MoveCommand.TryExecute(targetAreaMoveParam);
+				MoveMagnifierCommandParameter magnifierParam = new MoveMagnifierCommandParameter() { targetElement = Magnifier, targetPoint = targetAreaMoveParam.targetPoint, ViewboxSize = this.MagnifierViewBoxSize, Offset = MagnifierOffset };
+				ScreenShotWindowsCommands.MoveCommand.TryExecute(magnifierParam);
+				e.Handled = true;
+			}
 		}
 		#endregion
 
 		#region Interop operations
-		private void UpdateStatus(Point point)
-		{
-
-		}
 		private void StopHooks()
 		{
 			MouseHook.Stop();
@@ -462,23 +594,8 @@ namespace ScreenShotWindows
 		/// Resolve target area should-be position
 		/// </summary>
 		/// <param name="mousePT"></param>
-		private void MoveElement(InteropStructs.POINT mousePT)
-		{
 
-		}
-		private void MoveMagnifier(InteropStructs.POINT mousePT)
-		{
-
-		}
 		private void MoveRect()
-		{
-
-		}
-		private void MoveTargetArea()
-		{
-
-		}
-		private void MoveMaskArea()
 		{
 
 		}
@@ -554,6 +671,15 @@ namespace ScreenShotWindows
 					Owner = InteropMethods.GetDesktopWindow_()
 				};
 			}
+		}
+
+		public Color GetDesktopImagePixelColor(InteropStructs.POINT pt)
+		{
+			if(_desktopSnapShot != null)
+			{
+				return _desktopSnapShot.GetPixelColor(pt.X, pt.Y);
+			}
+			else return Colors.Transparent;
 		}
 		#endregion
 	}

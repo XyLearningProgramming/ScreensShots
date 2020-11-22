@@ -8,19 +8,34 @@
         Title="TestStart" Height="450" Width="800"
         ContentRendered="Window_ContentRendered">
 	<Grid>
-		<Grid.RowDefinitions>
-			<RowDefinition Height="Auto"></RowDefinition>
-			<RowDefinition Height="Auto"></RowDefinition>
-			<RowDefinition Height="Auto"></RowDefinition>
-        </Grid.RowDefinitions>
-		<TextBlock Text="{Binding MousePos}"></TextBlock>
-		<ScrollViewer x:Name="sv_tb">
-		<TextBlock Text="{Binding Showing}" TextWrapping="WrapWithOverflow" Grid.Row="1"></TextBlock>
-		</ScrollViewer>
-		<Border BorderBrush="Black" BorderThickness="2" Margin="0,5,5,0" MaxWidth="100" HorizontalAlignment="Right">
-			<StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
-				<TextBlock HorizontalAlignment="Right">Here</TextBlock>
-			</StackPanel>
+		<Border x:Name="PART_Magnifier" IsHitTestVisible="False"
+									HorizontalAlignment="Left" VerticalAlignment="Top"  BorderThickness="2" CornerRadius="1" 
+									Visibility="Visible">
+			<Border.Effect>
+				<DropShadowEffect BlurRadius="2" Opacity="0.2" Direction="-45" RenderingBias="Performance" ShadowDepth="3"/>
+			</Border.Effect>
+			<Grid>
+				<Grid.RowDefinitions>
+					<RowDefinition Height="Auto"></RowDefinition>
+					<RowDefinition Height="Auto"></RowDefinition>
+				</Grid.RowDefinitions>
+				<Border x:Name="MagnifierGridBorder" Margin="0,0,0,3" Background="Wheat" BorderThickness="2" BorderBrush="White" Width="121" Height="121">
+					<!--A cross shaped window draw on top of magnifier-->
+					<Grid>
+						<Grid.RowDefinitions>
+							<RowDefinition Height="*"></RowDefinition>
+							<RowDefinition Height="*"></RowDefinition>
+						</Grid.RowDefinitions>
+						<Grid.ColumnDefinitions>
+							<ColumnDefinition Width="*"></ColumnDefinition>
+							<ColumnDefinition Width="*"></ColumnDefinition>
+						</Grid.ColumnDefinitions>
+					</Grid>
+				</Border>
+				<TextBlock Background="#2000" Grid.Row="1" Foreground="Black" Padding="10,3,0,3" TextWrapping="Wrap" 
+				MaxWidth="{Binding ElementName=MagnifierGridBorder, Path=Width}" VerticalAlignment="Center">POS: (1000,1000)
+				RGB: (255,255,255)</TextBlock>
+			</Grid>
 		</Border>
 	</Grid>
 </Window>

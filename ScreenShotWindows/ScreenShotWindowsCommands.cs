@@ -6,11 +6,15 @@ using System.Windows;
 using System.Windows.Forms;
 using System.Windows.Input;
 using System.Windows.Interop;
+using System.Windows.Media;
+using Cursor = System.Windows.Input.Cursor;
+using Cursors = System.Windows.Input.Cursors;
 
 namespace ScreenShotWindows
 {
 	internal class ScreenShotWindowsCommands
 	{
+		// handler of window mouse is positioned (excluding screenshot windows itself)
 		IntPtr _mouseOverWindowHandler = IntPtr.Zero;
 
 		internal ScreensShotWindows Root { get; private set; }
@@ -33,7 +37,7 @@ namespace ScreenShotWindows
 				{
 					if(param is MoveCommandParameter mc && mc.targetElement == Root.TargetArea)
 					{
-						MoveTargetAreaExec(mc.targetPoint);
+						SnapTargetAreaExec(mc.targetPoint);
 					}
 					else if(param is MoveMagnifierCommandParameter mmc && mmc.targetElement == Root.Magnifier)
 					{
@@ -42,14 +46,44 @@ namespace ScreenShotWindows
 				},
 				(ICommandParameter param) => 
 				{
-					if(param is MoveCommandParameter mc && mc.targetElement == Root.TargetArea) { return !Root.IsSelecting && !Root.IsDrawing; }
+					if(param is MoveCommandParameter mc && mc.targetElement == Root.TargetArea) { return Root.WindowStatus == ScreenShotWindowStatus.Empty; }
+					else if(param is MoveMagnifierCommandParameter mmc) { return Root.WindowStatus != ScreenShotWindowStatus.IsSelecting; }
 					else return true;
 				}
 			)); }
 
+		private DelegateCommand<ICommandParameter> _updateMouseCursorCommand;
+		public DelegateCommand<ICommandParameter> UpdateMouseCursorCommand {get => _updateMouseCursorCommand ?? (_updateMouseCursorCommand = new DelegateCommand<ICommandParameter>(
+				(ICommandParameter param) =>
+				{
+					if(param is UpdateMouseCurosrCommandParameter um)
+					{
+						UpdateCursorIcon(um.MouoseGlobalPoint, um.SnapLength);
+					}
+				},
+				(ICommandParameter param) =>
+				{
+					// only available when not holding mouse and drawing
+					return Root.WindowStatus != ScreenShotWindowStatus.IsDrawing;
+				}
+			)); }
 
+		private DelegateCommand<ICommandParameter> _resizeTargetAreaCommand;
+		public DelegateCommand<ICommandParameter> ResizeTargetAreaCommand { get => _resizeTargetAreaCommand ?? (_resizeTargetAreaCommand = new DelegateCommand<ICommandParameter>(
+				 (ICommandParameter param) =>
+				 {
+					 if(param is ReSizeTargetAreaCommandParameter rem)
+						 MoveTargetAreaTo(rem.TargetRect);
+				 },
+				 (ICommandParameter param) => 
+				 {
+					 if(param is ReSizeTargetAreaCommandParameter rem)
+						 return Root.WindowStatus == ScreenShotWindowStatus.IsDrawing;
+					 return false;
+				 }
+			)); }
 		#region private methods
-		private void MoveTargetAreaExec(InteropStructs.POINT mousePT)
+		private void SnapTargetAreaExec(InteropStructs.POINT mousePT)
 		{
 			//// !!! This proves to always return our screenshot winow on top
 			//IntPtr mouseOverWindowHandler = InteropMethods.ChildWindowFromPointEx_(Root.DesktopWindowHandler, mousePT, InteropStructs.CHILDWINDOWEXTFlAG.CWP_SKIPDISABLED | InteropStructs.CHILDWINDOWEXTFlAG.CWP_SKIPINVISIBLE);
@@ -68,20 +102,25 @@ namespace ScreenShotWindows
 //#endif
 				// check if point in any window
 			_mouseOverWindowHandler = IntPtr.Zero;
+			InteropStructs.RECT mouseOverRect = new InteropStructs.RECT(0,0,0,0);
 			foreach(var pair in Root.AllWinHandlers)
 			{
-				InteropStructs.RECT rect = pair.Value;
-				if(InteropMethods.PtInRect_(ref rect, mousePT))
+				InteropStructs.RECT rect = pair.Item2;
+				if(InteropMethods.PtInRect_(ref rect, mousePT) && InteropMethods.IsWindowEnabled_(pair.Item1))
 				{
-					_mouseOverWindowHandler = pair.Key;
+					_mouseOverWindowHandler = pair.Item1;
+					mouseOverRect = rect;
 					break;
 				}
 			}
-			if(_mouseOverWindowHandler == IntPtr.Zero) _mouseOverWindowHandler = Root.DesktopWindowHandler;
+			if(_mouseOverWindowHandler == IntPtr.Zero)
+			{ 
+				_mouseOverWindowHandler = Root.DesktopWindowHandler; 
+				InteropMethods.GetWindowRect_(_mouseOverWindowHandler, out mouseOverRect);
+			}
 
 			LogSystemShared.LogWriter.WriteLine(InteropMethods.GetWindowText_(_mouseOverWindowHandler), "Mouse over window ");
 
-			InteropMethods.GetWindowRect_(_mouseOverWindowHandler, out InteropStructs.RECT mouseOverRect);
 			MoveTargetAreaTo(mouseOverRect);
 		}
 		private void MoveTargetAreaTo(InteropStructs.RECT rect)
@@ -112,9 +151,12 @@ namespace ScreenShotWindows
 			}
 			// set target area stats
 			Root.TargetArea.Width = rect.Width;
-			Root.TargetArea.Height = rect.Height+50;
+			Root.TargetArea.Height = rect.Height;
 			Root.TargetArea.Margin = new Thickness(rect.Left, rect.Top, 0, 0);
-			Root.Size = rect.GetSize(); // update string size top left
+			Root.TargetAreaSize = rect.GetSize(); // update string size top left
+
+			// move stackpanel below
+			Root.StackedButtons.Margin = new Thickness(0, Root.TargetArea.Margin.Top + Root.TargetArea.Height + 5, Root.DesktopWindowRect.Width - Root.TargetArea.Margin.Left - Root.TargetArea.Width -5, 0);
 
 			MoveMaskArea();
 		}
@@ -140,16 +182,22 @@ namespace ScreenShotWindows
 			Root.MaskAreaBottom.Width = Root.TargetArea.Margin.Left + Root.TargetArea.Width;
 			Root.MaskAreaBottom.Height = Root.DesktopWindowRect.Height - Root.MaskAreaBottom.Margin.Top;
 
-#if DEBUG
-			LogRect(Root.TargetArea);
-			LogRect(Root.MaskAreaLeft); LogRect(Root.MaskAreaTop); LogRect(Root.MaskAreaRight); LogRect(Root.MaskAreaBottom);
-#endif
+//#if DEBUG
+//			LogRect(Root.TargetArea);
+//			LogRect(Root.MaskAreaLeft); LogRect(Root.MaskAreaTop); LogRect(Root.MaskAreaRight); LogRect(Root.MaskAreaBottom);
+//#endif
 		}
 
 		private void MoveMagnifier(MoveMagnifierCommandParameter param)
 		{
 			Root.Magnifier.Margin = new Thickness(param.targetPoint.X + param.Offset.X, param.targetPoint.Y + param.Offset.Y, 0, 0);
 			Root.MagnifierPreviewVisualBrush.Viewbox = new Rect(new Point(param.targetPoint.X - param.ViewboxSize.Width / 2 + 0.5, param.targetPoint.Y - param.ViewboxSize.Height / 2 + 0.5), param.ViewboxSize);
+			// update it's hint string POS: (1000,1000) RGB: (255,255,255)
+			StringBuilder hint = new StringBuilder();
+			hint.Append($"Pos: ({param.targetPoint.X},{param.targetPoint.Y})  ");
+			Color pixel = Root.GetDesktopImagePixelColor(param.targetPoint);
+			hint.Append($"RGBA: ({pixel.R},{pixel.G},{pixel.B},{pixel.A})");
+			Root.MagnifierHintText = hint.ToString();
 		}
 
 		#if DEBUG
@@ -158,7 +206,136 @@ namespace ScreenShotWindows
 			LogSystemShared.LogWriter.WriteLine($"Rect at Point {elem.Margin.Top}*{elem.Margin.Left}, width {elem.Width} and {elem.Height}");
 		}
 		#endif
-#endregion
+		private void UpdateCursorIcon(InteropStructs.POINT mousePT, int SnapLength)
+		{
+			// paste from handycontrol's control
+			Cursor cursor;
+			InteropStructs.RECT targetAreaRect = Root.TargetAreaRECT;
+
+			var leftAbs = Math.Abs(mousePT.X);
+			var topAbs = Math.Abs(mousePT.Y);
+			var rightAbs = Math.Abs(mousePT.X - targetAreaRect.Width);
+			var downAbs = Math.Abs(mousePT.Y - targetAreaRect.Height);
+
+			//_canDrag = false;
+			//_isOut = false;
+			//_flagArr[0] = 0;
+			//_flagArr[1] = 0;
+			//_flagArr[2] = 0;
+			//_flagArr[3] = 0;
+
+			if(leftAbs <= SnapLength)
+			{
+				if(topAbs > SnapLength)
+				{
+					if(downAbs > SnapLength)
+					{
+						// left
+						cursor = Cursors.SizeWE;
+						//_pointFixed = new Point(_targetWindowRect.Right, _targetWindowRect.Top);
+						//_pointFloating = new InteropValues.POINT(_targetWindowRect.Left, _targetWindowRect.Bottom);
+						//_flagArr[0] = 1;
+					}
+					else
+					{
+						//left bottom
+						cursor = Cursors.SizeNESW;
+						//_pointFixed = new Point(_targetWindowRect.Right, _targetWindowRect.Top);
+						//_pointFloating = new InteropValues.POINT(_targetWindowRect.Left, _targetWindowRect.Bottom);
+						//_flagArr[0] = 1;
+						//_flagArr[3] = 1;
+					}
+				}
+				else
+				{
+					// left top
+					cursor = Cursors.SizeNWSE;
+					//_pointFixed = new Point(_targetWindowRect.Right, _targetWindowRect.Bottom);
+					//_pointFloating = new InteropValues.POINT(_targetWindowRect.Left, _targetWindowRect.Top);
+					//_flagArr[0] = 1;
+					//_flagArr[1] = 1;
+				}
+			}
+			else if(rightAbs > SnapLength)
+			{
+				if(topAbs > SnapLength)
+				{
+					if(downAbs > SnapLength)
+					{
+						if(Root.TargetArea.IsMouseOver)
+						{
+							//drag
+							cursor = Cursors.SizeAll;
+							//_canDrag = true;
+						}
+						else
+						{
+							//out
+							cursor = Cursors.Arrow;
+							//_isOut = true;
+						}
+					}
+					else
+					{
+						//bottom
+						cursor = Cursors.SizeNS;
+						//_pointFixed = new Point(_targetWindowRect.Left, _targetWindowRect.Top);
+						//_pointFloating = new InteropValues.POINT(_targetWindowRect.Right, _targetWindowRect.Bottom);
+						//_flagArr[3] = 1;
+					}
+				}
+				else
+				{
+					//top
+					cursor = Cursors.SizeNS;
+					//_pointFixed = new Point(_targetWindowRect.Right, _targetWindowRect.Bottom);
+					//_pointFloating = new InteropValues.POINT(_targetWindowRect.Left, _targetWindowRect.Top);
+					//_flagArr[1] = 1;
+				}
+			}
+			else if(rightAbs <= SnapLength)
+			{
+				if(topAbs > SnapLength)
+				{
+					if(downAbs > SnapLength)
+					{
+						//right
+						cursor = Cursors.SizeWE;
+						//_pointFixed = new Point(_targetWindowRect.Left, _targetWindowRect.Bottom);
+						//_pointFloating = new InteropValues.POINT(_targetWindowRect.Right, _targetWindowRect.Top);
+						//_flagArr[2] = 1;
+					}
+					else
+					{
+						//right bottom
+						cursor = Cursors.SizeNWSE;
+						//_pointFixed = new Point(_targetWindowRect.Left, _targetWindowRect.Top);
+						//_pointFloating = new InteropValues.POINT(_targetWindowRect.Right, _targetWindowRect.Bottom);
+						//_flagArr[2] = 1;
+						//_flagArr[3] = 1;
+					}
+				}
+				else
+				{
+					// right top
+					cursor = Cursors.SizeNESW;
+					//_pointFixed = new Point(_targetWindowRect.Left, _targetWindowRect.Bottom);
+					//_pointFloating = new InteropValues.POINT(_targetWindowRect.Right, _targetWindowRect.Top);
+					//_flagArr[1] = 1;
+					//_flagArr[2] = 1;
+				}
+			}
+			else
+			{
+				//out
+				cursor = Cursors.Arrow;
+				//_isOut = true;
+			}
+
+			Root.Cursor = cursor;
+		}
+
+		#endregion
 	}
 
 	/// <summary>
@@ -203,6 +380,17 @@ namespace ScreenShotWindows
 		}
 	}
 
+	internal static class DelegateCommandTryExecExt 
+	{ 
+		public static void TryExecute(this DelegateCommand<ICommandParameter> command, ICommandParameter param)
+		{
+			if(command.CanExecute(param))
+			{
+				command.Execute(param);
+			}
+		}
+	}
+
 	internal interface ICommandParameter { }
 	internal class MoveCommandParameter : ICommandParameter 
 	{
@@ -214,4 +402,10 @@ namespace ScreenShotWindows
 		public InteropStructs.POINT Offset;
 		public Size ViewboxSize;
 	}
+	internal class ReSizeTargetAreaCommandParameter: ICommandParameter
+	{
+		public InteropStructs.RECT TargetRect;
+	}
+
+	internal class UpdateMouseCurosrCommandParameter : ICommandParameter { public InteropStructs.POINT MouoseGlobalPoint; public int SnapLength = 4; }
 }

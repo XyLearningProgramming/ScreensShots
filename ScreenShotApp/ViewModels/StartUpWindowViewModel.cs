@@ -47,7 +47,7 @@ namespace ScreenShotApp.ViewModels
 
 		public DelegateCommand StartCapturing
 		{
-			get => startCapturing ??
+			get => startCapturing ?? (startCapturing =
 				new DelegateCommand(
 					(_) => 
 					{
@@ -57,7 +57,7 @@ namespace ScreenShotApp.ViewModels
 					},
 				// not allowing multiple capture at the same time
 				(_)=>{ return !this.isCapturing; }
-				);
+				));
 		}
 		#endregion
 	}

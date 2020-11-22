@@ -67,14 +67,12 @@ namespace ScreenShotApp
 			base.OnPreviewMouseLeftButtonUp(e);
 			Showing += GetCurrentMethod();
 			Showing += Environment.NewLine;
-			sv_tb.ScrollToBottom();
 		}
 		protected override void OnPreviewMouseLeftButtonDown(MouseButtonEventArgs e)
 		{
 			base.OnPreviewMouseLeftButtonDown(e);
 			Showing += GetCurrentMethod();
 			Showing += Environment.NewLine;
-			sv_tb.ScrollToBottom();
 		}
 		protected override void OnPreviewMouseDoubleClick(MouseButtonEventArgs e)
 		{
@@ -82,7 +80,6 @@ namespace ScreenShotApp
 			Showing += GetCurrentMethod();
 			Showing += Environment.NewLine;
 			e.Handled = true;
-			sv_tb.ScrollToBottom();
 		}
 		protected override void OnPreviewMouseMove(MouseEventArgs e)
 		{

@@ -200,6 +200,11 @@ namespace ScreenShotWindows.Utils.Interop
         public static bool IsWindowVisible_(IntPtr hWnd) => IsWindowVisible(hWnd).HandleError();
 
         [DllImport(InteropConstants.User32, CharSet = CharSet.Auto, SetLastError = true)]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        private static extern bool IsWindowEnabled(IntPtr hWnd);
+        public static bool IsWindowEnabled_(IntPtr hWnd) => IsWindowEnabled(hWnd).HandleError();
+
+        [DllImport(InteropConstants.User32, CharSet = CharSet.Auto, SetLastError = true)]
 		private static extern int GetWindowTextLength(IntPtr hWnd);
         public static int GetWindowTextLength_(IntPtr hWnd)=>GetWindowTextLength(hWnd).HandleError();
 
@@ -240,6 +245,7 @@ namespace ScreenShotWindows.Utils.Interop
         [return: MarshalAs(UnmanagedType.Bool)]
         private static extern bool PtInRect([In] ref InteropStructs.RECT rect, InteropStructs.POINT pt);
         public static bool PtInRect_(ref InteropStructs.RECT rect, InteropStructs.POINT pt) => PtInRect(ref rect, pt).HandleError();
+
 
         internal class Gdip
         {
