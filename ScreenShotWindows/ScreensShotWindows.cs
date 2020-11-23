@@ -20,6 +20,7 @@ using UserSettingsStruct;
 namespace ScreenShotWindows
 {
 	public enum ScreenShotWindowStatus {Empty,IsDrawing,IsSelecting }
+	public enum TargetAreaSelectingStatus {Empty,Dragging,Resizing }
 
 	/// <summary>
 	/// Window that captures screen through user32.dll
@@ -50,8 +51,14 @@ namespace ScreenShotWindows
 		private Style _referenceRectStyle;
 		private HashSet<Rectangle> _referenceRectsInContainer;
 		private bool _saveScreenShots = false;
-		private Point _firstMouseLClickRelativePosition = new Point(0,0);
+
+		private Point _drawingMouseStartPosition = new Point(0,0);
+		private Point _selectingMouseStartPosition = new Point(0, 0);
+		private Point _selectingMousePressedLastFramePosition = new Point(0, 0);
+		private TargetAreaSelectingStatus targetAreaSelectingStatus = TargetAreaSelectingStatus.Empty;
+
 		private const int _mouseMoveLegalThreshold = 3;
+		private const int _mouseCursorHitThreshold = 7;
 
 		private const string ElementCanvas = "PART_Canvas";
 		private const string ElementMaskAreaLeft = "PART_MaskAreaLeft";
@@ -90,7 +97,7 @@ namespace ScreenShotWindows
 		public InteropStructs.POINT MagnifierOffset { get; private set; } = new InteropStructs.POINT(5, 25);
 		public List<Tuple<IntPtr, InteropStructs.RECT>> AllWinHandlers { get; set; } = new List<Tuple<IntPtr, InteropStructs.RECT>>();
 
-		public InteropStructs.RECT TargetAreaRECT {get=> new InteropStructs.RECT((int)TargetArea.Margin.Left, (int)TargetArea.Margin.Top, (int)TargetArea.Margin.Right + (int)TargetArea.Width, (int)TargetArea.Margin.Top + (int)TargetArea.Height); }
+		public InteropStructs.RECT TargetAreaRECT {get=> new InteropStructs.RECT((int)TargetArea.Margin.Left, (int)TargetArea.Margin.Top, (int)TargetArea.Margin.Left + (int)TargetArea.Width, (int)TargetArea.Margin.Top + (int)TargetArea.Height); }
 		#endregion
 
 		#region dependency properties
@@ -139,6 +146,21 @@ namespace ScreenShotWindows
 		#region constructor
 		internal ScreensShotWindows(ScreenShot screenShot, WindowsCaptureScreenTarget screenTarget, WindowsCaptureMode captureMode, UserSettingsForScreenShotWindows userSettings)
 		{
+			this.Init(screenShot, screenTarget, captureMode, userSettings);
+		}
+
+		internal ScreensShotWindows(System.Windows.Forms.Screen targetScreen, ScreenShot screenShot, WindowsCaptureScreenTarget screenTarget, WindowsCaptureMode captureMode, UserSettingsForScreenShotWindows userSettings)
+		{
+			this.WindowStartupLocation = WindowStartupLocation.Manual;
+			this.Left = targetScreen.Bounds.Left;
+			this.Top = targetScreen.Bounds.Top;
+			this.Width = targetScreen.Bounds.Width;
+			this.Height = targetScreen.Bounds.Height;
+			this.Init(screenShot, screenTarget, captureMode, userSettings);
+		}
+
+		internal void Init(ScreenShot screenShot, WindowsCaptureScreenTarget screenTarget, WindowsCaptureMode captureMode, UserSettingsForScreenShotWindows userSettings)
+		{
 			//store settings
 			_screenShot = screenShot;
 			_screenTarget = screenTarget;
@@ -165,10 +187,10 @@ namespace ScreenShotWindows
 			InteropMethods.EnumWindows_((IntPtr wnd, IntPtr param) =>
 			{
 				IntPtr thisWindowHandler = new WindowInteropHelper(this).Handle;
-				if(InteropMethods.IsWindowVisible_(wnd) && InteropMethods.IsWindowEnabled_(wnd) && wnd!=thisWindowHandler)
+				if(InteropMethods.IsWindowVisible_(wnd) && InteropMethods.IsWindowEnabled_(wnd) && wnd != thisWindowHandler)
 				{
 					InteropMethods.GetWindowRect_(wnd, out InteropStructs.RECT rect);
-					AllWinHandlers.Add(new Tuple<IntPtr, InteropStructs.RECT>( wnd, rect ));
+					AllWinHandlers.Add(new Tuple<IntPtr, InteropStructs.RECT>(wnd, rect));
 				}
 				return true;
 			}, IntPtr.Zero);
@@ -206,7 +228,7 @@ namespace ScreenShotWindows
 		{
 			if(_screenTarget == WindowsCaptureScreenTarget.MainScreen)
 			{
-				_desktopSnapShot = GetDesktopWindowSnapShot();
+				_desktopSnapShot = GetCurrentWindowSnapShot();
 				LogWriter.WriteLine("Desktop screen shot captured.");
 				Image image = new Image() { Source = _desktopSnapShot };
 				RenderOptions.SetBitmapScalingMode(image, BitmapScalingMode.NearestNeighbor);
@@ -216,7 +238,7 @@ namespace ScreenShotWindows
 			}
 
 			// move target area and magnifier
-			InteropMethods.GetCursorPos_(out InteropStructs.POINT mousePoint);
+			InteropStructs.POINT mousePoint = new InteropStructs.POINT(Mouse.GetPosition(this));
 			MoveCommandParameter param = new MoveCommandParameter() { targetElement = TargetArea, targetPoint = mousePoint };
 			if(ScreenShotWindowsCommands.MoveCommand.CanExecute(param))
 			{
@@ -237,6 +259,17 @@ namespace ScreenShotWindows
 		private void ScreenShotWindowsClosed(object sender, EventArgs args)
 		{
 			StopHooks();
+			_screenShot.OnClose(); // close callback
+
+			if(_saveScreenShots)
+			{
+				InteropStructs.RECT rect = TargetAreaRECT;
+				CroppedBitmap image = new CroppedBitmap(_desktopSnapShot, new Int32Rect(rect.Left, rect.Top, rect.Width, rect.Height));
+				image.SaveToLocal();
+			}
+
+			this.Loaded -= ScreensShotWindowsLoaded;
+			this.Closed -= ScreenShotWindowsClosed;
 		}
 
 		/// <summary>
@@ -263,7 +296,13 @@ namespace ScreenShotWindows
 		{
 			if(d is ScreensShotWindows window && args.NewValue != args.OldValue)
 			{
-				// all controls' behavior respond to this change
+				if(args.OldValue is ScreenShotWindowStatus OldStatus && args.NewValue is ScreenShotWindowStatus NewStatus)
+				{
+					if(OldStatus == ScreenShotWindowStatus.IsDrawing && NewStatus == ScreenShotWindowStatus.IsSelecting)
+					{
+						window._screenShot.OnTargetAreaSelected(window);
+					}
+				}
 			}
 		}
 		private void GenerateReferenceDotsLines(Grid container, bool IsShowingReferenceLine = false)
@@ -379,6 +418,14 @@ namespace ScreenShotWindows
 			{
 				WindowStatus = ScreenShotWindowStatus.IsSelecting;
 				e.Handled = true;
+			}else if(WindowStatus == ScreenShotWindowStatus.IsSelecting)
+			{
+				if(targetAreaSelectingStatus != TargetAreaSelectingStatus.Empty)
+				{
+					targetAreaSelectingStatus = TargetAreaSelectingStatus.Empty;
+					ScreenShotWindowsCommands.UpdateMouseCursorCommand.TryExecute(new UpdateMouseCurosrCommandParameter() { MouseLocalPoint = new InteropStructs.POINT(e.GetPosition(this)), SnapLength = _mouseCursorHitThreshold });
+				}
+				e.Handled = true;
 			}
 		}
 		protected override void OnPreviewMouseLeftButtonDown(MouseButtonEventArgs e)
@@ -387,7 +434,15 @@ namespace ScreenShotWindows
 			if(WindowStatus == ScreenShotWindowStatus.Empty)
 			{
 				WindowStatus = ScreenShotWindowStatus.IsDrawing;
-				_firstMouseLClickRelativePosition = e.GetPosition(this);
+				_drawingMouseStartPosition = e.GetPosition(this);
+				e.Handled = true;
+				return;
+			}
+			else if(WindowStatus == ScreenShotWindowStatus.IsSelecting)
+			{
+				// respond to selecting drag events
+				_selectingMouseStartPosition = e.GetPosition(this);
+				_selectingMousePressedLastFramePosition = e.GetPosition(this);
 				e.Handled = true;
 				return;
 			}
@@ -405,8 +460,7 @@ namespace ScreenShotWindows
 				}
 				else if(WindowStatus == ScreenShotWindowStatus.IsSelecting)
 				{
-					//TODO: save the image
-
+					_saveScreenShots = true;
 					this.Close();
 					e.Handled = true;
 					return;
@@ -440,18 +494,13 @@ namespace ScreenShotWindows
 			else if(WindowStatus == ScreenShotWindowStatus.IsDrawing && e.LeftButton== MouseButtonState.Pressed)
 			{
 				Point mousePos = e.GetPosition(this);
-				Vector distance = mousePos - _firstMouseLClickRelativePosition;
-				if(Math.Abs(distance.X) <= _mouseMoveLegalThreshold && Math.Abs(distance.Y) <= _mouseMoveLegalThreshold)
-				{
-					// too small move not update anything 
-					return;
-				}
+				if(IsMouseDeltaTooSmall(mousePos, _drawingMouseStartPosition)) return;
 				// update target area 
 				InteropStructs.RECT rect = new InteropStructs.RECT(0,0,0,0);
-				rect.Left = Math.Min((int)_firstMouseLClickRelativePosition.X, (int)mousePos.Y);
-				rect.Top = Math.Min((int)_firstMouseLClickRelativePosition.Y, (int)mousePos.Y);
-				rect.Right = Math.Max((int)_firstMouseLClickRelativePosition.X, (int)mousePos.Y);
-				rect.Bottom = Math.Max((int)_firstMouseLClickRelativePosition.Y, (int)mousePos.Y);
+				rect.Left = Math.Min((int)_drawingMouseStartPosition.X, (int)mousePos.X);
+				rect.Top = Math.Min((int)_drawingMouseStartPosition.Y, (int)mousePos.Y);
+				rect.Right = Math.Max((int)_drawingMouseStartPosition.X, (int)mousePos.X);
+				rect.Bottom = Math.Max((int)_drawingMouseStartPosition.Y, (int)mousePos.Y);
 
 				ReSizeTargetAreaCommandParameter reparam = new ReSizeTargetAreaCommandParameter() { TargetRect = rect };
 				ScreenShotWindowsCommands.ResizeTargetAreaCommand.TryExecute(reparam);
@@ -463,12 +512,74 @@ namespace ScreenShotWindows
 			}
 			else if(WindowStatus== ScreenShotWindowStatus.IsSelecting)
 			{
-				// TODO: mouse cursor update not correct
-				ScreenShotWindowsCommands.UpdateMouseCursorCommand.TryExecute(new UpdateMouseCurosrCommandParameter() { MouoseGlobalPoint= new InteropStructs.POINT(this.PointToScreen(e.GetPosition(this))), SnapLength=_mouseMoveLegalThreshold });
-				// is selecting respond to: mouse & key board move
-				// mouse move if around target area means drag
+				Point mousePos = e.GetPosition(this);
+				if(targetAreaSelectingStatus == TargetAreaSelectingStatus.Empty)
+					ScreenShotWindowsCommands.UpdateMouseCursorCommand.TryExecute(new UpdateMouseCurosrCommandParameter() { MouseLocalPoint = new InteropStructs.POINT(mousePos), SnapLength = _mouseCursorHitThreshold });
+
+				if(e.LeftButton == MouseButtonState.Pressed)
+				{
+					// two behavior: drag & resize
+					// it's ugly to use cursor icon, but it's the most efficient.
+					if(targetAreaSelectingStatus == TargetAreaSelectingStatus.Empty && this.Cursor == Cursors.Arrow) { e.Handled = true; return; }
+					// mouse move if inside target area that means drag
+					InteropStructs.RECT rect = TargetAreaRECT;
+					if(targetAreaSelectingStatus == TargetAreaSelectingStatus.Dragging || (targetAreaSelectingStatus == TargetAreaSelectingStatus.Empty && this.Cursor == Cursors.SizeAll))
+					{
+						targetAreaSelectingStatus = TargetAreaSelectingStatus.Dragging;
+						// drag 
+						Vector distance = mousePos - _selectingMousePressedLastFramePosition;
+						ReSizeTargetAreaCommandParameter reparam = new ReSizeTargetAreaCommandParameter() { TargetRect = rect.Translation(new InteropStructs.POINT((int)distance.X, (int)distance.Y)) };
+						ScreenShotWindowsCommands.ResizeTargetAreaCommand.TryExecute(reparam);
+					}
+					else if((targetAreaSelectingStatus == TargetAreaSelectingStatus.Resizing) || (targetAreaSelectingStatus == TargetAreaSelectingStatus.Empty && this.Cursor != Cursors.SizeAll && this.Cursor!=Cursors.Arrow))
+					{
+						targetAreaSelectingStatus = TargetAreaSelectingStatus.Resizing;
+						InteropStructs.RECT newRect = rect;
+						InteropStructs.POINT pt = new InteropStructs.POINT(mousePos);
+						// enlarge 
+						bool leftAbs = Math.Abs(_selectingMouseStartPosition.X - rect.Left) <= _mouseCursorHitThreshold;
+						bool topAbs = Math.Abs(_selectingMouseStartPosition.Y - rect.Top) <= _mouseCursorHitThreshold;
+						bool rightAbs = Math.Abs(_selectingMouseStartPosition.X - rect.Right) <= _mouseCursorHitThreshold;
+						bool downAbs = Math.Abs(_selectingMouseStartPosition.Y - rect.Bottom) <= _mouseCursorHitThreshold;
+						if(leftAbs)
+						{
+							newRect.Left = pt.X;
+						}
+						else if(rightAbs)
+						{
+							newRect.Right = pt.X;
+						}
+						if(topAbs)
+						{
+							newRect.Top = pt.Y;
+						}
+						else if(downAbs)
+						{
+							newRect.Bottom = pt.Y;
+						}
+						ReSizeTargetAreaCommandParameter reparam = new ReSizeTargetAreaCommandParameter() { TargetRect = newRect };
+						ScreenShotWindowsCommands.ResizeTargetAreaCommand.TryExecute(reparam);
+					}
+					MoveMagnifierCommandParameter magnifierParam = new MoveMagnifierCommandParameter() { targetElement = Magnifier, targetPoint = new InteropStructs.POINT(mousePos), ViewboxSize = this.MagnifierViewBoxSize, Offset = MagnifierOffset };
+					ScreenShotWindowsCommands.MoveCommand.TryExecute(magnifierParam);
+
+					_selectingMousePressedLastFramePosition = mousePos;
+					TargetArea.InvalidateVisual();
+				}
+				e.Handled = true;
 
 			}
+		}
+
+		private bool IsMouseDeltaTooSmall(Point p1, Point p2)
+		{
+			Vector distance = p1 - p2;
+			if(Math.Abs(distance.X) <= _mouseMoveLegalThreshold && Math.Abs(distance.Y) <= _mouseMoveLegalThreshold)
+			{
+				// too small move not update anything 
+				return true;
+			}
+			else return false;
 		}
 
 		protected override void OnPreviewMouseRightButtonUp(MouseButtonEventArgs e)
@@ -478,7 +589,8 @@ namespace ScreenShotWindows
 			{
 				this.Close();
 				e.Handled = true;
-			}else if(WindowStatus == ScreenShotWindowStatus.IsSelecting)
+			}
+			else if(WindowStatus == ScreenShotWindowStatus.IsSelecting)
 			{
 				WindowStatus = ScreenShotWindowStatus.Empty;
 				// snap target area & move magnifier
@@ -507,10 +619,6 @@ namespace ScreenShotWindows
 			//respond to mouse click events here. Change main status.
 			// can I do this without a global hook?
 		}
-		private void SaveScreenShots()
-		{
-
-		}
 		private void GetWindowsSnapShots()
 		{
 
@@ -526,7 +634,10 @@ namespace ScreenShotWindows
 			_desktopWindowHandler = InteropMethods.GetForegroundWindow_();
 			return GetWindowSnapShot(_desktopWindowHandler);
 		}
-
+		private BitmapImage GetCurrentWindowSnapShot()
+		{
+			return GetWindowSnapShot(new WindowInteropHelper(this).Handle);
+		}
 		private BitmapImage GetWindowSnapShot(IntPtr windowHandler)
 		{
 			try
@@ -686,8 +797,7 @@ namespace ScreenShotWindows
 
 	public static class BitMapImageLocalSaveExt
 	{
-		private static string extension = ".bmp";
-		public static void SaveToLocal(this BitmapImage image, string imageName = "", string AbsoluteDirectory = "")
+		public static void SaveToLocal(this BitmapSource image, string imageName = "", string AbsoluteDirectory = "", string extension = ".bmp")
 		{
 			try
 			{
@@ -701,13 +811,25 @@ namespace ScreenShotWindows
 				}
 				imageName = System.IO.Path.Combine(AbsoluteDirectory, imageName)+extension;
 
-				BitmapEncoder encoder = new BmpBitmapEncoder();
-				encoder.Frames.Add(BitmapFrame.Create(image));
-				using(FileStream fs = new System.IO.FileStream(imageName, System.IO.FileMode.Create))
+				if(extension == ".bmp") {
+					BitmapEncoder encoder = new BmpBitmapEncoder();
+					encoder.Frames.Add(BitmapFrame.Create(image));
+					using(FileStream fs = new System.IO.FileStream(imageName, System.IO.FileMode.Create))
+					{
+						encoder.Save(fs);
+						LogSystemShared.LogWriter.WriteLine($"Image has been saved: {imageName}");
+					}
+				}else if(extension == ".png")
 				{
-					encoder.Save(fs);
-					LogSystemShared.LogWriter.WriteLine($"Image has been saved: {imageName}");
+					PngBitmapEncoder encoder = new PngBitmapEncoder();
+					encoder.Frames.Add(BitmapFrame.Create(image));
+					using(FileStream fs = new System.IO.FileStream(imageName, System.IO.FileMode.Create))
+					{
+						encoder.Save(fs);
+						LogSystemShared.LogWriter.WriteLine($"Image has been saved: {imageName}");
+					}
 				}
+				
 			}
 			catch(Exception e)
 			{

@@ -7,15 +7,22 @@
         mc:Ignorable="d"
         Title="TestStart" Height="450" Width="800"
         ContentRendered="Window_ContentRendered">
+
+	<Window.Resources>
+		<Style x:Key="DefaultDarkButtonStyle" TargetType="{x:Type Button}">
+
+		</Style>
+	</Window.Resources>
 	<Grid>
 		<Border x:Name="PART_Magnifier" IsHitTestVisible="False"
-									HorizontalAlignment="Left" VerticalAlignment="Top"  BorderThickness="2" CornerRadius="1" 
-									Visibility="Visible">
+									HorizontalAlignment="Left" VerticalAlignment="Top"  BorderThickness="5" CornerRadius="1" 
+									Visibility="Visible" BorderBrush="Black">
 			<Border.Effect>
 				<DropShadowEffect BlurRadius="2" Opacity="0.2" Direction="-45" RenderingBias="Performance" ShadowDepth="3"/>
 			</Border.Effect>
 			<Grid>
 				<Grid.RowDefinitions>
+					<RowDefinition Height="Auto"></RowDefinition>
 					<RowDefinition Height="Auto"></RowDefinition>
 					<RowDefinition Height="Auto"></RowDefinition>
 				</Grid.RowDefinitions>
@@ -30,12 +37,18 @@
 							<ColumnDefinition Width="*"></ColumnDefinition>
 							<ColumnDefinition Width="*"></ColumnDefinition>
 						</Grid.ColumnDefinitions>
+						<TextBlock Text="{Binding IsHit}"></TextBlock>
 					</Grid>
 				</Border>
 				<TextBlock Background="#2000" Grid.Row="1" Foreground="Black" Padding="10,3,0,3" TextWrapping="Wrap" 
 				MaxWidth="{Binding ElementName=MagnifierGridBorder, Path=Width}" VerticalAlignment="Center">POS: (1000,1000)
 				RGB: (255,255,255)</TextBlock>
+				<TextBlock x:Name="tb_screenInfo" Grid.Row="2"></TextBlock>
 			</Grid>
 		</Border>
+		<DockPanel x:Name="PART_StackedButtons" VerticalAlignment="Top" HorizontalAlignment="Right" Height="20" Width="200" LastChildFill="False">
+			<Button DockPanel.Dock="Right" Style="{StaticResource DefaultDarkButtonStyle}">Cancel</Button>
+			<!--TODO add function buttons-->
+		</DockPanel>
 	</Grid>
 </Window>

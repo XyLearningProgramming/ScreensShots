@@ -61,6 +61,10 @@ namespace ScreenShotWindows.Utils.Interop
 				return new System.Windows.Point(Left, Top);
 			}
 			public System.Windows.Size GetSize() => new System.Windows.Size(Width, Height);
+            public RECT Translation(InteropStructs.POINT pt)
+			{
+                return new RECT(this.Left + pt.X, this.Top + pt.Y, this.Right + pt.X, this.Bottom + pt.Y);
+			}
 		}
 
 		/// <summary>

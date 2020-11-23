@@ -15,12 +15,13 @@ namespace ScreenShotApp.ViewModels
 	{
 		public event PropertyChangedEventHandler PropertyChanged;
 		#region fields
-		private RootViewModel Root;
-		private bool isCapturing = false;
 		private UserSettingsForScreenShotWindows userSettings;
+		private int capturingWindowCount = 0;
 		#endregion
 
 		#region properties
+		public bool IsCapturing { get => capturingWindowCount != 0; }
+		private RootViewModel Root { get; set; }
 
 		#endregion
 		public StartUpWindowViewModel(RootViewModel rootViewModel)
@@ -39,7 +40,7 @@ namespace ScreenShotApp.ViewModels
 		{
 
 		}
-
+		private void CaptureWindowCloseCallback(object sender, EventArgs e) => capturingWindowCount--;
 		#endregion
 
 		#region Commands
@@ -51,12 +52,14 @@ namespace ScreenShotApp.ViewModels
 				new DelegateCommand(
 					(_) => 
 					{
-						isCapturing = true;
+						capturingWindowCount++;
 						//MessageBox.Show("CommandExecuted");
-						new ScreenShot().Start(WindowsCaptureScreenTarget.MainScreen, WindowsCaptureMode.Frame, userSettings);
+						ScreenShot.Closed += CaptureWindowCloseCallback;
+						ScreenShot ss = new ScreenShot();
+						ss.Start(WindowsCaptureScreenTarget.AllScreens, WindowsCaptureMode.Frame, userSettings);
 					},
-				// not allowing multiple capture at the same time
-				(_)=>{ return !this.isCapturing; }
+				// not allowing multiple capture at the same time for now
+				(_)=>{ return !this.IsCapturing; }
 				));
 		}
 		#endregion

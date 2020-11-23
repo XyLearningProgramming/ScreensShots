@@ -46,9 +46,9 @@ namespace ScreenShotWindows
 				},
 				(ICommandParameter param) => 
 				{
-					if(param is MoveCommandParameter mc && mc.targetElement == Root.TargetArea) { return Root.WindowStatus == ScreenShotWindowStatus.Empty; }
-					else if(param is MoveMagnifierCommandParameter mmc) { return Root.WindowStatus != ScreenShotWindowStatus.IsSelecting; }
-					else return true;
+					if(param is MoveCommandParameter mc && mc.targetElement == Root.TargetArea && IsPointInFrameworkElement(mc.targetPoint, mc.targetElement)) { return Root.WindowStatus == ScreenShotWindowStatus.Empty; }
+					else if(param is MoveMagnifierCommandParameter mmc && IsPointInFrameworkElement(mmc.targetPoint, mmc.targetElement)) { return Root.WindowStatus != ScreenShotWindowStatus.IsSelecting; }
+					else return false;
 				}
 			)); }
 
@@ -58,13 +58,13 @@ namespace ScreenShotWindows
 				{
 					if(param is UpdateMouseCurosrCommandParameter um)
 					{
-						UpdateCursorIcon(um.MouoseGlobalPoint, um.SnapLength);
+						UpdateCursorIcon(um.MouseLocalPoint, um.SnapLength);
 					}
 				},
 				(ICommandParameter param) =>
 				{
 					// only available when not holding mouse and drawing
-					return Root.WindowStatus != ScreenShotWindowStatus.IsDrawing;
+					return (Root.WindowStatus != ScreenShotWindowStatus.IsDrawing) && IsPointInFrameworkElement(new InteropStructs.POINT(Mouse.GetPosition(Root)), Root);
 				}
 			)); }
 
@@ -78,7 +78,7 @@ namespace ScreenShotWindows
 				 (ICommandParameter param) => 
 				 {
 					 if(param is ReSizeTargetAreaCommandParameter rem)
-						 return Root.WindowStatus == ScreenShotWindowStatus.IsDrawing;
+						 return (Root.WindowStatus != ScreenShotWindowStatus.Empty) && IsPointInFrameworkElement(new InteropStructs.POINT(Mouse.GetPosition(Root)), Root);
 					 return false;
 				 }
 			)); }
@@ -101,6 +101,7 @@ namespace ScreenShotWindows
 //				}
 //#endif
 				// check if point in any window
+
 			_mouseOverWindowHandler = IntPtr.Zero;
 			InteropStructs.RECT mouseOverRect = new InteropStructs.RECT(0,0,0,0);
 			foreach(var pair in Root.AllWinHandlers)
@@ -119,7 +120,7 @@ namespace ScreenShotWindows
 				InteropMethods.GetWindowRect_(_mouseOverWindowHandler, out mouseOverRect);
 			}
 
-			LogSystemShared.LogWriter.WriteLine(InteropMethods.GetWindowText_(_mouseOverWindowHandler), "Mouse over window ");
+			//LogSystemShared.LogWriter.WriteLine(InteropMethods.GetWindowText_(_mouseOverWindowHandler), "Mouse over window ");
 
 			MoveTargetAreaTo(mouseOverRect);
 		}
@@ -190,13 +191,31 @@ namespace ScreenShotWindows
 
 		private void MoveMagnifier(MoveMagnifierCommandParameter param)
 		{
-			Root.Magnifier.Margin = new Thickness(param.targetPoint.X + param.Offset.X, param.targetPoint.Y + param.Offset.Y, 0, 0);
 			Root.MagnifierPreviewVisualBrush.Viewbox = new Rect(new Point(param.targetPoint.X - param.ViewboxSize.Width / 2 + 0.5, param.targetPoint.Y - param.ViewboxSize.Height / 2 + 0.5), param.ViewboxSize);
+
+			bool flipUp = false, flipLeft = false;
+			if(param.targetPoint.Y + param.Offset.Y + Root.Magnifier.ActualHeight >= Root.DesktopWindowRect.Height) flipUp = true;
+			if(param.targetPoint.X + param.Offset.X + Root.Magnifier.ActualWidth >= Root.ActualWidth) flipLeft = true;
+			if(flipUp && flipLeft)
+			{
+				Root.Magnifier.Margin = new Thickness(param.targetPoint.X - param.Offset.X - Root.Magnifier.ActualWidth, param.targetPoint.Y - param.Offset.Y - Root.Magnifier.ActualHeight, 0, 0);
+			}
+			else if(flipUp)
+			{
+				Root.Magnifier.Margin = new Thickness(param.targetPoint.X + param.Offset.X, param.targetPoint.Y - param.Offset.Y - Root.Magnifier.ActualHeight, 0, 0);
+			}
+			else if(flipLeft)
+			{
+				Root.Magnifier.Margin = new Thickness(param.targetPoint.X - param.Offset.X - Root.Magnifier.ActualWidth, param.targetPoint.Y + param.Offset.Y, 0, 0);
+			}
+			else
+				Root.Magnifier.Margin = new Thickness(param.targetPoint.X + param.Offset.X, param.targetPoint.Y + param.Offset.Y, 0, 0);
+
 			// update it's hint string POS: (1000,1000) RGB: (255,255,255)
 			StringBuilder hint = new StringBuilder();
-			hint.Append($"Pos: ({param.targetPoint.X},{param.targetPoint.Y})  ");
+			hint.Append($"Pos: ({param.targetPoint.X},{param.targetPoint.Y})    ");
 			Color pixel = Root.GetDesktopImagePixelColor(param.targetPoint);
-			hint.Append($"RGBA: ({pixel.R},{pixel.G},{pixel.B},{pixel.A})");
+			hint.Append($"RGB: ({pixel.R},{pixel.G},{pixel.B})");
 			Root.MagnifierHintText = hint.ToString();
 		}
 
@@ -208,133 +227,50 @@ namespace ScreenShotWindows
 		#endif
 		private void UpdateCursorIcon(InteropStructs.POINT mousePT, int SnapLength)
 		{
-			// paste from handycontrol's control
 			Cursor cursor;
 			InteropStructs.RECT targetAreaRect = Root.TargetAreaRECT;
 
-			var leftAbs = Math.Abs(mousePT.X);
-			var topAbs = Math.Abs(mousePT.Y);
-			var rightAbs = Math.Abs(mousePT.X - targetAreaRect.Width);
-			var downAbs = Math.Abs(mousePT.Y - targetAreaRect.Height);
-
-			//_canDrag = false;
-			//_isOut = false;
-			//_flagArr[0] = 0;
-			//_flagArr[1] = 0;
-			//_flagArr[2] = 0;
-			//_flagArr[3] = 0;
-
-			if(leftAbs <= SnapLength)
+			bool leftAbs = Math.Abs(mousePT.X - targetAreaRect.Left) <= SnapLength;
+			bool topAbs = Math.Abs(mousePT.Y - targetAreaRect.Top) <= SnapLength;
+			bool rightAbs = Math.Abs(mousePT.X - targetAreaRect.Right) <= SnapLength;
+			bool downAbs = Math.Abs(mousePT.Y - targetAreaRect.Bottom) <= SnapLength;
+			if(!leftAbs && !topAbs && !rightAbs && !downAbs)
 			{
-				if(topAbs > SnapLength)
+				if(InteropMethods.PtInRect_(ref targetAreaRect, mousePT))
 				{
-					if(downAbs > SnapLength)
-					{
-						// left
-						cursor = Cursors.SizeWE;
-						//_pointFixed = new Point(_targetWindowRect.Right, _targetWindowRect.Top);
-						//_pointFloating = new InteropValues.POINT(_targetWindowRect.Left, _targetWindowRect.Bottom);
-						//_flagArr[0] = 1;
-					}
-					else
-					{
-						//left bottom
-						cursor = Cursors.SizeNESW;
-						//_pointFixed = new Point(_targetWindowRect.Right, _targetWindowRect.Top);
-						//_pointFloating = new InteropValues.POINT(_targetWindowRect.Left, _targetWindowRect.Bottom);
-						//_flagArr[0] = 1;
-						//_flagArr[3] = 1;
-					}
+					cursor = Cursors.SizeAll;
 				}
 				else
 				{
-					// left top
-					cursor = Cursors.SizeNWSE;
-					//_pointFixed = new Point(_targetWindowRect.Right, _targetWindowRect.Bottom);
-					//_pointFloating = new InteropValues.POINT(_targetWindowRect.Left, _targetWindowRect.Top);
-					//_flagArr[0] = 1;
-					//_flagArr[1] = 1;
+					cursor = Cursors.Arrow;
 				}
 			}
-			else if(rightAbs > SnapLength)
+			else if((leftAbs && topAbs) || (rightAbs && downAbs))
 			{
-				if(topAbs > SnapLength)
-				{
-					if(downAbs > SnapLength)
-					{
-						if(Root.TargetArea.IsMouseOver)
-						{
-							//drag
-							cursor = Cursors.SizeAll;
-							//_canDrag = true;
-						}
-						else
-						{
-							//out
-							cursor = Cursors.Arrow;
-							//_isOut = true;
-						}
-					}
-					else
-					{
-						//bottom
-						cursor = Cursors.SizeNS;
-						//_pointFixed = new Point(_targetWindowRect.Left, _targetWindowRect.Top);
-						//_pointFloating = new InteropValues.POINT(_targetWindowRect.Right, _targetWindowRect.Bottom);
-						//_flagArr[3] = 1;
-					}
-				}
-				else
-				{
-					//top
-					cursor = Cursors.SizeNS;
-					//_pointFixed = new Point(_targetWindowRect.Right, _targetWindowRect.Bottom);
-					//_pointFloating = new InteropValues.POINT(_targetWindowRect.Left, _targetWindowRect.Top);
-					//_flagArr[1] = 1;
-				}
+				cursor = Cursors.SizeNWSE;
 			}
-			else if(rightAbs <= SnapLength)
+			else if((topAbs && rightAbs) || (downAbs && leftAbs))
 			{
-				if(topAbs > SnapLength)
-				{
-					if(downAbs > SnapLength)
-					{
-						//right
-						cursor = Cursors.SizeWE;
-						//_pointFixed = new Point(_targetWindowRect.Left, _targetWindowRect.Bottom);
-						//_pointFloating = new InteropValues.POINT(_targetWindowRect.Right, _targetWindowRect.Top);
-						//_flagArr[2] = 1;
-					}
-					else
-					{
-						//right bottom
-						cursor = Cursors.SizeNWSE;
-						//_pointFixed = new Point(_targetWindowRect.Left, _targetWindowRect.Top);
-						//_pointFloating = new InteropValues.POINT(_targetWindowRect.Right, _targetWindowRect.Bottom);
-						//_flagArr[2] = 1;
-						//_flagArr[3] = 1;
-					}
-				}
-				else
-				{
-					// right top
-					cursor = Cursors.SizeNESW;
-					//_pointFixed = new Point(_targetWindowRect.Left, _targetWindowRect.Bottom);
-					//_pointFloating = new InteropValues.POINT(_targetWindowRect.Right, _targetWindowRect.Top);
-					//_flagArr[1] = 1;
-					//_flagArr[2] = 1;
-				}
+				cursor = Cursors.SizeNESW;
 			}
-			else
+			else if(topAbs || downAbs)
 			{
-				//out
-				cursor = Cursors.Arrow;
-				//_isOut = true;
+				cursor = Cursors.SizeNS;
 			}
+			else if(rightAbs || leftAbs)
+			{
+				cursor = Cursors.SizeWE;
+			}
+			else cursor = Cursors.Arrow;
 
 			Root.Cursor = cursor;
 		}
 
+		private static bool IsPointInFrameworkElement(InteropStructs.POINT relativePoint, FrameworkElement element)
+		{
+			InteropStructs.RECT rect = new InteropStructs.RECT((int)element.Margin.Left, (int)element.Margin.Top, (int)element.Margin.Left + (int)element.ActualWidth, (int)element.Margin.Top + (int)element.ActualHeight);
+			return InteropMethods.PtInRect_(ref rect, relativePoint);
+		}
 		#endregion
 	}
 
@@ -407,5 +343,5 @@ namespace ScreenShotWindows
 		public InteropStructs.RECT TargetRect;
 	}
 
-	internal class UpdateMouseCurosrCommandParameter : ICommandParameter { public InteropStructs.POINT MouoseGlobalPoint; public int SnapLength = 4; }
+	internal class UpdateMouseCurosrCommandParameter : ICommandParameter { public InteropStructs.POINT MouseLocalPoint; public int SnapLength = 4; }
 }

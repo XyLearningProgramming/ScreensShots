@@ -110,8 +110,7 @@
 								</local:GridWithSolidLines>
 								<!--Buttons on the second row-->
 							</Border>
-							<StackPanel x:Name="PART_StackedButtons" Orientation="Horizontal" VerticalAlignment="Top" HorizontalAlignment="Right" 
-							MaxWidth="{Binding ElementName=PART_TargetArea, Path=ActualWidth}">
+							<StackPanel x:Name="PART_StackedButtons" Orientation="Horizontal" VerticalAlignment="Top" HorizontalAlignment="Right">
 								<Button>Cancel</Button>
 								<!--TODO add function buttons-->
 							</StackPanel>
