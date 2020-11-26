@@ -7,8 +7,10 @@ namespace UserSettingsStruct
 	/// <summary>
 	/// Class used to initialze ScreenShotWindows according to user's preferences 
 	/// </summary>
-	public class UserSettingsForScreenShotWindows
+	public struct UserSettingsForScreenShotWindows
 	{
-		public bool IsShowingReferenceLine = false;
+		public bool IsShowingReferenceLine;
+		public double WhiteDipAnimDuration;
+		public string ImageFolderPath;
 	}
 }

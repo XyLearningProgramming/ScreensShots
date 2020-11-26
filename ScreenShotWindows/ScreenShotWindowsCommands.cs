@@ -46,8 +46,18 @@ namespace ScreenShotWindows
 				},
 				(ICommandParameter param) => 
 				{
-					if(param is MoveCommandParameter mc && mc.targetElement == Root.TargetArea && IsPointInFrameworkElement(mc.targetPoint, mc.targetElement)) { return Root.WindowStatus == ScreenShotWindowStatus.Empty; }
-					else if(param is MoveMagnifierCommandParameter mmc && IsPointInFrameworkElement(mmc.targetPoint, mmc.targetElement)) { return Root.WindowStatus != ScreenShotWindowStatus.IsSelecting; }
+					if(param is MoveCommandParameter mc && mc.targetElement == Root.TargetArea && IsPointInFrameworkElement(mc.targetPoint, Root)) { return Root.WindowStatus == ScreenShotWindowStatus.Empty; }
+					else if(param is MoveMagnifierCommandParameter mmc ) 
+					{
+						if(IsPointInFrameworkElement(mmc.targetPoint, Root) && Root.WindowStatus != ScreenShotWindowStatus.IsSelecting)
+						{
+							return true;
+						}
+						else
+						{
+							return false;
+						}
+					}
 					else return false;
 				}
 			)); }
@@ -73,7 +83,9 @@ namespace ScreenShotWindows
 				 (ICommandParameter param) =>
 				 {
 					 if(param is ReSizeTargetAreaCommandParameter rem)
+					 {
 						 MoveTargetAreaTo(rem.TargetRect);
+					 }
 				 },
 				 (ICommandParameter param) => 
 				 {
@@ -107,17 +119,16 @@ namespace ScreenShotWindows
 			foreach(var pair in Root.AllWinHandlers)
 			{
 				InteropStructs.RECT rect = pair.Item2;
-				if(InteropMethods.PtInRect_(ref rect, mousePT) && InteropMethods.IsWindowEnabled_(pair.Item1))
+				if(InteropMethods.PtInRect_(ref rect, mousePT))
 				{
 					_mouseOverWindowHandler = pair.Item1;
-					mouseOverRect = rect;
+					mouseOverRect = new InteropStructs.RECT(rect);
 					break;
 				}
 			}
 			if(_mouseOverWindowHandler == IntPtr.Zero)
-			{ 
-				_mouseOverWindowHandler = Root.DesktopWindowHandler; 
-				InteropMethods.GetWindowRect_(_mouseOverWindowHandler, out mouseOverRect);
+			{
+				mouseOverRect = Root.ThisRECT;
 			}
 
 			//LogSystemShared.LogWriter.WriteLine(InteropMethods.GetWindowText_(_mouseOverWindowHandler), "Mouse over window ");
@@ -139,26 +150,26 @@ namespace ScreenShotWindows
 				rect.Top = 0;
 			}
 
-			if(rect.Right > Root.DesktopWindowRect.Width)
+			if(rect.Right > (int)Root.Width)
 			{
-				rect.Left -= rect.Right - Root.DesktopWindowRect.Width;
-				rect.Right = Root.DesktopWindowRect.Width;
+				rect.Left -= rect.Right - (int)Root.Width;
+				rect.Right = (int)Root.Width;
 			}
 
-			if(rect.Bottom > Root.DesktopWindowRect.Height)
+			if(rect.Bottom > (int)Root.Height)
 			{
-				rect.Top -= rect.Bottom - Root.DesktopWindowRect.Height;
-				rect.Bottom = Root.DesktopWindowRect.Height;
+				rect.Top -= rect.Bottom - (int)Root.Height;
+				rect.Bottom = (int)Root.Height;
 			}
 			// set target area stats
 			Root.TargetArea.Width = rect.Width;
 			Root.TargetArea.Height = rect.Height;
 			Root.TargetArea.Margin = new Thickness(rect.Left, rect.Top, 0, 0);
-			Root.TargetAreaSize = rect.GetSize(); // update string size top left
-
+			Root.TargetAreaSize = Root.GetRectAfterScaling(rect).GetSize(); // update string size top left
+			
 			// move stackpanel below
-			Root.StackedButtons.Margin = new Thickness(0, Root.TargetArea.Margin.Top + Root.TargetArea.Height + 5, Root.DesktopWindowRect.Width - Root.TargetArea.Margin.Left - Root.TargetArea.Width -5, 0);
-
+			//Root.StackedButtons.Margin = new Thickness(0, Root.TargetArea.Margin.Top + Root.TargetArea.Height + 5, Root.DesktopWindowRect.Width - Root.TargetArea.Margin.Left - Root.TargetArea.Width -5, 0);
+			MoveStackButtons(Root.TargetArea.Margin.Top, Root.Width- Root.TargetArea.Margin.Left- Root.TargetArea.Width, new InteropStructs.POINT(-5,5));
 			MoveMaskArea();
 		}
 		private void MoveMaskArea()
@@ -168,20 +179,20 @@ namespace ScreenShotWindows
 			// l l 1 = 1	
 			// l_l
 			//
-			Root.MaskAreaLeft.Width = Root.TargetArea.Margin.Left;
-			Root.MaskAreaLeft.Height = Root.TargetArea.Margin.Top + Root.TargetArea.Height;
+			Root.MaskAreaLeft.Width = Math.Max(Root.TargetArea.Margin.Left,0);
+			Root.MaskAreaLeft.Height = Math.Max(0,Root.TargetArea.Margin.Top + Root.TargetArea.Height);
 
-			Root.MaskAreaTop.Margin = new Thickness(Root.TargetArea.Margin.Left, 0, 0, 0);
-			Root.MaskAreaTop.Height = Root.TargetArea.Margin.Top;
-			Root.MaskAreaTop.Width = Root.DesktopWindowRect.Width - Root.TargetArea.Margin.Left;
+			Root.MaskAreaTop.Margin = new Thickness(Math.Max(Root.TargetArea.Margin.Left,0), 0, 0, 0);
+			Root.MaskAreaTop.Height = Math.Max(Root.TargetArea.Margin.Top,0);
+			Root.MaskAreaTop.Width = Math.Max(Root.Width - Root.TargetArea.Margin.Left,0);
 
-			Root.MaskAreaRight.Margin = new Thickness(Root.TargetArea.Margin.Left + Root.TargetArea.Width, Root.TargetArea.Margin.Top, 0, 0);
-			Root.MaskAreaRight.Width = Root.DesktopWindowRect.Width - Root.TargetArea.Margin.Left - Root.TargetArea.Width;
-			Root.MaskAreaRight.Height = Root.DesktopWindowRect.Height - Root.TargetArea.Margin.Top;
+			Root.MaskAreaRight.Margin = new Thickness(Math.Max(Root.TargetArea.Margin.Left + Root.TargetArea.Width,0), Math.Max(Root.TargetArea.Margin.Top,0), 0, 0);
+			Root.MaskAreaRight.Width = Math.Max(Root.Width - Root.TargetArea.Margin.Left - Root.TargetArea.Width,0);
+			Root.MaskAreaRight.Height = Math.Max(Root.Height - Root.TargetArea.Margin.Top,0);
 
-			Root.MaskAreaBottom.Margin = new Thickness(0, Root.TargetArea.Height + Root.TargetArea.Margin.Top, 0, 0);
-			Root.MaskAreaBottom.Width = Root.TargetArea.Margin.Left + Root.TargetArea.Width;
-			Root.MaskAreaBottom.Height = Root.DesktopWindowRect.Height - Root.MaskAreaBottom.Margin.Top;
+			Root.MaskAreaBottom.Margin = new Thickness(0, Math.Max(Root.TargetArea.Height + Root.TargetArea.Margin.Top,0), 0, 0);
+			Root.MaskAreaBottom.Width = Math.Max(Root.TargetArea.Margin.Left + Root.TargetArea.Width,0);
+			Root.MaskAreaBottom.Height = Math.Max(Root.Height - Root.MaskAreaBottom.Margin.Top, 0);
 
 //#if DEBUG
 //			LogRect(Root.TargetArea);
@@ -189,12 +200,18 @@ namespace ScreenShotWindows
 //#endif
 		}
 
+		private void MoveStackButtons(double Top, double Right, InteropStructs.POINT offset)
+		{
+			Root.StackedButtons.Margin = new Thickness(0, Top + offset.Y, Right + offset.X, 0);
+
+		}
+
 		private void MoveMagnifier(MoveMagnifierCommandParameter param)
 		{
 			Root.MagnifierPreviewVisualBrush.Viewbox = new Rect(new Point(param.targetPoint.X - param.ViewboxSize.Width / 2 + 0.5, param.targetPoint.Y - param.ViewboxSize.Height / 2 + 0.5), param.ViewboxSize);
 
 			bool flipUp = false, flipLeft = false;
-			if(param.targetPoint.Y + param.Offset.Y + Root.Magnifier.ActualHeight >= Root.DesktopWindowRect.Height) flipUp = true;
+			if(param.targetPoint.Y + param.Offset.Y + Root.Magnifier.ActualHeight >= Root.ActualHeight) flipUp = true;
 			if(param.targetPoint.X + param.Offset.X + Root.Magnifier.ActualWidth >= Root.ActualWidth) flipLeft = true;
 			if(flipUp && flipLeft)
 			{
@@ -213,9 +230,11 @@ namespace ScreenShotWindows
 
 			// update it's hint string POS: (1000,1000) RGB: (255,255,255)
 			StringBuilder hint = new StringBuilder();
-			hint.Append($"Pos: ({param.targetPoint.X},{param.targetPoint.Y})    ");
+			InteropStructs.POINT scaled = Root.GetPointAfterScaling(param.targetPoint);
+			hint.Append($"Pos: ({scaled.X},{scaled.Y})    ");
 			Color pixel = Root.GetDesktopImagePixelColor(param.targetPoint);
 			hint.Append($"RGB: ({pixel.R},{pixel.G},{pixel.B})");
+			//hint.Append(Mouse.DirectlyOver.GetType());
 			Root.MagnifierHintText = hint.ToString();
 		}
 

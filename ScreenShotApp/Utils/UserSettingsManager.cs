@@ -8,6 +8,8 @@ using System.IO;
 using System.Windows.Markup;
 using System.Xml;
 using System.Runtime.CompilerServices;
+using UserSettingsStruct;
+using System.Windows.Input;
 
 namespace ScreenShotApp.Utils
 {
@@ -65,10 +67,66 @@ namespace ScreenShotApp.Utils
 
 		#region ScreenShotWindows
 		public bool IsShowingReferenceLine { get => GetValue(false); set => SetValue(value); }
+		public double WhiteDipAnimDuration { get => GetValue(0.5d); set => SetValue(value); }
+		public ModifierKeys CaptureShortcutModifierKey 
+		{
+			get => (ModifierKeys)GetValue((int)ModifierKeys.Alt);
+			set => SetValue((int)value);
+		}
+		public Key? CaptureShotcutMainKey
+		{
+			get
+			{
+				Key storedKey = (Key)GetValue((int)Key.S);
+				return storedKey == Key.None ? null : storedKey as Key?;
+			}
+			set
+			{
+				if(!value.HasValue) SetValue((int)Key.None);
+				else SetValue((int)value);
+			}
+		}
+
+		/// <summary>
+		/// Get guarantees an useable folder, while set don't check
+		/// </summary>
+		private string defaultFolder = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "images");
+		public string ImagesFolderAbsolutePath 
+		{
+			get
+			{
+				string folder = GetValue(defaultFolder);
+				if(!Directory.Exists(folder))
+				{
+					try
+					{
+						Directory.CreateDirectory(folder);
+					}
+					catch
+					{
+						folder = defaultFolder;
+					}
+				}
+				return folder;
+			}
+			set => SetValue(value);
+		}
+
+		public string ColorThemePrefered { get => GetValue(ColorTheme.DefaultColorTheme.ToString()); set => SetValue(value); }
 		#endregion
 		#endregion
 
 		#region methods
+		public static UserSettingsForScreenShotWindows ConstructSettings()
+		{
+			return new UserSettingsForScreenShotWindows() 
+			{ 
+				IsShowingReferenceLine = Instance.IsShowingReferenceLine, 
+				WhiteDipAnimDuration = Instance.WhiteDipAnimDuration,
+				ImageFolderPath = Instance.ImagesFolderAbsolutePath,
+			};
+		}
+
 		private bool TryLoad(string path, out ResourceDictionary loadedSettings)
 		{
 			loadedSettings = default(ResourceDictionary);
@@ -141,5 +199,26 @@ namespace ScreenShotApp.Utils
 			}
 		}
 		#endregion
+	}
+
+	public static class ModifierKeyToKeysExt
+	{
+		public static System.Windows.Forms.Keys ConvertToKeys(this System.Windows.Input.ModifierKeys modifier)
+		{
+			System.Windows.Forms.Keys result = System.Windows.Forms.Keys.None;
+			if(modifier.HasFlag(System.Windows.Input.ModifierKeys.Control))
+			{
+				result |= System.Windows.Forms.Keys.Control;
+			}
+			else if(modifier.HasFlag(System.Windows.Input.ModifierKeys.Shift))
+			{
+				result |= System.Windows.Forms.Keys.Shift;
+			}
+			else if(modifier.HasFlag(System.Windows.Input.ModifierKeys.Alt))
+			{
+				result |= System.Windows.Forms.Keys.Alt;
+			}
+			return result;
+		}
 	}
 }

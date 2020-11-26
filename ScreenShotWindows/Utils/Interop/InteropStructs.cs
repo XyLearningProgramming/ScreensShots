@@ -23,6 +23,11 @@ namespace ScreenShotWindows.Utils.Interop
                 this.X = (int) pt.X;
                 this.Y = (int) pt.Y;
 			}
+            public POINT(POINT pt)
+			{
+                this.X = pt.X;
+                this.Y = pt.Y;
+			}
 
 			public override bool Equals(object obj)
 			{
@@ -31,6 +36,14 @@ namespace ScreenShotWindows.Utils.Interop
 			public override int GetHashCode()
 			{
                 return (X, Y).GetHashCode();
+			}
+            public POINT Translation(POINT pt)
+			{
+                return new POINT(this.X + pt.X, this.Y + pt.Y);
+			}
+            public POINT Scaling(double factor)
+			{
+                return new POINT(Convert.ToInt32(X * factor), Convert.ToInt32(Y * factor));
 			}
 		}
 
@@ -53,6 +66,13 @@ namespace ScreenShotWindows.Utils.Interop
 				Right = (int)rect_.Right;
 				Bottom = (int)rect_.Bottom;
 			}
+            public RECT(RECT rect)
+			{
+                this.Left = rect.Left;
+                this.Top = rect.Top;
+                this.Right = rect.Right;
+                this.Bottom = rect.Bottom;
+			}
 
 			public int Width { get => Right - Left; set => Right = Left + value; }
 			public int Height { get => Bottom - Top; set => Bottom = Top + value; }
@@ -64,6 +84,10 @@ namespace ScreenShotWindows.Utils.Interop
             public RECT Translation(InteropStructs.POINT pt)
 			{
                 return new RECT(this.Left + pt.X, this.Top + pt.Y, this.Right + pt.X, this.Bottom + pt.Y);
+			}
+            public RECT Scaling(double factor)
+			{
+                return new RECT(Convert.ToInt32(Left * factor), Convert.ToInt32(Top * factor), Convert.ToInt32(Right * factor), Convert.ToInt32(Bottom * factor));
 			}
 		}
 

@@ -17,18 +17,18 @@ namespace ScreenShotApp.ViewModels
 		#region fields
 		private UserSettingsForScreenShotWindows userSettings;
 		private int capturingWindowCount = 0;
+		private string captureShortcutString = $"{KeyStringHelper.GetSelectKeyText((System.Windows.Input.Key)UserSettingsManager.Instance.CaptureShotcutMainKey, UserSettingsManager.Instance.CaptureShortcutModifierKey,true,true)}";
 		#endregion
 
 		#region properties
-		public bool IsCapturing { get => capturingWindowCount != 0; }
-		private RootViewModel Root { get; set; }
-
+		//public bool IsCapturing { get => capturingWindowCount != 0; }
+		public RootViewModel Root { get; set; }
+		
+		public string CaptureShortcutString { get => captureShortcutString; set => this.MutateVerbose(ref captureShortcutString, value, e => PropertyChanged?.Invoke(this, e)); }
 		#endregion
 		public StartUpWindowViewModel(RootViewModel rootViewModel)
 		{
 			this.Root = rootViewModel;
-			// TODO adjust this via config file & system
-			userSettings = new UserSettingsForScreenShotWindows() { IsShowingReferenceLine = UserSettingsManager.Instance.IsShowingReferenceLine };
 		}
 
 		#region public functions
@@ -38,30 +38,11 @@ namespace ScreenShotApp.ViewModels
 		}
 		public void OnWindowClosed(object sender, EventArgs args)
 		{
-
+			
 		}
-		private void CaptureWindowCloseCallback(object sender, EventArgs e) => capturingWindowCount--;
 		#endregion
 
 		#region Commands
-		private DelegateCommand startCapturing;
-
-		public DelegateCommand StartCapturing
-		{
-			get => startCapturing ?? (startCapturing =
-				new DelegateCommand(
-					(_) => 
-					{
-						capturingWindowCount++;
-						//MessageBox.Show("CommandExecuted");
-						ScreenShot.Closed += CaptureWindowCloseCallback;
-						ScreenShot ss = new ScreenShot();
-						ss.Start(WindowsCaptureScreenTarget.AllScreens, WindowsCaptureMode.Frame, userSettings);
-					},
-				// not allowing multiple capture at the same time for now
-				(_)=>{ return !this.IsCapturing; }
-				));
-		}
 		#endregion
 	}
 

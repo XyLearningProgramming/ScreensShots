@@ -1,0 +1,59 @@
+﻿<local:WindowBase x:Class="ScreenShotApp.OptionWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:ScreenShotApp"
+        xmlns:con="clr-namespace:ScreenShotApp.Controls"
+		xmlns:vm="clr-namespace:ScreenShotApp.ViewModels"
+        mc:Ignorable="d"
+        Title="OptionWindow" Height="450" Width="800"
+        d:DataContext="{d:DesignInstance vm:OptionsWindowViewModel, IsDesignTimeCreatable=True}" 
+        >
+	<Grid>
+		<Grid.ColumnDefinitions>
+			<ColumnDefinition Width="Auto"></ColumnDefinition>
+			<ColumnDefinition Width="*"></ColumnDefinition>
+		</Grid.ColumnDefinitions>
+
+		<ScrollViewer>
+			<StackPanel x:Name="sp_OptionsList" Grid.Column="0" Margin="8">
+				<StackPanel.Resources>
+					<Style BasedOn="{StaticResource {x:Type con:ExtendedRadioButton}}" TargetType="{x:Type con:ExtendedRadioButton}">
+						<Setter Property="Padding" Value="2,2,2,2"/>
+						<Setter Property="FontSize" Value="17"/>
+						<Setter Property="Cursor" Value="Hand"/>
+						<Setter Property="ContentWidth" Value="24"/>
+						<Setter Property="TextWrapping" Value="WrapWithOverflow"/>
+						<Setter Property="HorizontalContentAlignment" Value="Left"/>
+					</Style>
+				</StackPanel.Resources>
+				<!--Capture mode + related shortcuts-->
+				<con:ExtendedRadioButton x:Name="extrb_CaptureMode" Text="Capture Modes" Icon="{StaticResource appbar_camera_auto}" IsChecked="True"></con:ExtendedRadioButton>
+				<!--Manually change screen res inferred-->
+				<con:ExtendedRadioButton x:Name="extrb_ScreenRes" Text="Screens" Icon="{StaticResource appbar_monitor_identify}"></con:ExtendedRadioButton>
+				<!--Color theme choose, other colors-->
+				<con:ExtendedRadioButton x:Name="extrb_Others" Text="Others" Icon="{StaticResource appbar_booklist}"></con:ExtendedRadioButton>
+				<con:ExtendedRadioButton x:Name="extrb_About" Text="About" Icon="{StaticResource appbar_cloud}"></con:ExtendedRadioButton>
+			</StackPanel>
+		</ScrollViewer>
+
+		<DockPanel x:Name="dp_RightPanel" Grid.Column="1" LastChildFill="False">
+			<Grid DockPanel.Dock="Top" x:Name="gr_CaptureMode" Visibility="{Binding ElementName=extrb_CaptureMode, Path=IsChecked, Mode=OneWay, Converter={StaticResource BooleanToVisibilityConverter}}">
+				<Expander Style="{DynamicResource ExpanderModernDefaultStyle}" ExpandDirection="Down" Header="Capture Shortcut" IsExpanded="True">
+					<StackPanel Orientation="Vertical">
+						<Label Content="Capture Keyboard ShortCut"></Label>
+						<con:KeyBox x:Name="kb_Capture" Height="24" Margin="3" AllowAllKeys="False"
+						ModifierKeys="{Binding CaptureShortcutModifierKey}" MainKey="{Binding CaptureShortcutMainKey}" 
+						HorizontalAlignment="Left" VerticalAlignment="Top"
+						KeyChanged="Global_KeyChanged"></con:KeyBox>
+					</StackPanel>
+				</Expander>
+			</Grid>
+			<DockPanel LastChildFill="False" DockPanel.Dock="Bottom">
+				<con:ExtendedButton x:Name="bt_ApplyAll" DockPanel.Dock="Right" Text="Apply" Click="bt_ApplyAll_Click"></con:ExtendedButton>
+				<con:ExtendedButton x:Name="bt_Cancel" DockPanel.Dock="Right" Text="Cancel" Click="bt_Cancel_Click"></con:ExtendedButton>
+			</DockPanel>
+		</DockPanel>
+	</Grid>
+</local:WindowBase>

@@ -4,5 +4,6 @@
     xmlns:local="clr-namespace:ScreenShotWindows">
 	<ResourceDictionary.MergedDictionaries>
 		<ResourceDictionary Source="pack://application:,,,/ScreenShotWindows;component/Themes/ScreensShotWindows.xaml"></ResourceDictionary>
-    </ResourceDictionary.MergedDictionaries>
+		<ResourceDictionary Source="pack://application:,,,/ScreenShotWindows;component/Themes/WhiteDipWindow.xaml"></ResourceDictionary>
+	</ResourceDictionary.MergedDictionaries>
 </ResourceDictionary>

@@ -4,16 +4,30 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:ScreenShotApp"
+		xmlns:c="clr-namespace:ScreenShotApp.Controls"
         mc:Ignorable="d"
         Title="TestStart" Height="450" Width="800"
         ContentRendered="Window_ContentRendered">
 
 	<Window.Resources>
-		<Style x:Key="DefaultDarkButtonStyle" TargetType="{x:Type Button}">
-
-		</Style>
+		<Storyboard x:Key="WhtieDipStoryBoard">
+			<DoubleAnimation From="0" To="1" AutoReverse="True" RepeatBehavior="1x" Duration="0:0:0.5">
+				<DoubleAnimation.EasingFunction>
+					<PowerEase EasingMode="EaseOut"></PowerEase>
+				</DoubleAnimation.EasingFunction>
+			</DoubleAnimation>
+		</Storyboard>
 	</Window.Resources>
 	<Grid>
+		<Grid.ColumnDefinitions>
+			<ColumnDefinition Width="53*"/>
+			<ColumnDefinition Width="747*"/>
+		</Grid.ColumnDefinitions>
+		<!--<Grid.RowDefinitions>
+			<RowDefinition Height="Auto"></RowDefinition>
+			<RowDefinition Height="Auto"></RowDefinition>
+			<RowDefinition Height="Auto"></RowDefinition>
+		</Grid.RowDefinitions>
 		<Border x:Name="PART_Magnifier" IsHitTestVisible="False"
 									HorizontalAlignment="Left" VerticalAlignment="Top"  BorderThickness="5" CornerRadius="1" 
 									Visibility="Visible" BorderBrush="Black">
@@ -27,7 +41,9 @@
 					<RowDefinition Height="Auto"></RowDefinition>
 				</Grid.RowDefinitions>
 				<Border x:Name="MagnifierGridBorder" Margin="0,0,0,3" Background="Wheat" BorderThickness="2" BorderBrush="White" Width="121" Height="121">
-					<!--A cross shaped window draw on top of magnifier-->
+					-->
+		<!--A cross shaped window draw on top of magnifier-->
+		<!--
 					<Grid>
 						<Grid.RowDefinitions>
 							<RowDefinition Height="*"></RowDefinition>
@@ -47,8 +63,11 @@
 			</Grid>
 		</Border>
 		<DockPanel x:Name="PART_StackedButtons" VerticalAlignment="Top" HorizontalAlignment="Right" Height="20" Width="200" LastChildFill="False">
-			<Button DockPanel.Dock="Right" Style="{StaticResource DefaultDarkButtonStyle}">Cancel</Button>
-			<!--TODO add function buttons-->
-		</DockPanel>
+			<Button DockPanel.Dock="Right">Cancel</Button>
+			-->
+		<!--TODO add function buttons-->
+		<!--
+		</DockPanel>-->
+		<c:ExtendedButton Grid.ColumnSpan="2" Text="Here"></c:ExtendedButton>
 	</Grid>
 </Window>

@@ -9,6 +9,7 @@
     <Import_RootNamespace>UserSettingsStruct</Import_RootNamespace>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="$(MSBuildThisFileDirectory)ScreenResolutionHelper.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)UserSettingsForScreenShotWindows.cs" />
   </ItemGroup>
 </Project>

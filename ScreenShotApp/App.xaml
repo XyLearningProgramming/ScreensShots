@@ -2,7 +2,8 @@
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:local="clr-namespace:ScreenShotApp"
-             xmlns:vm="clr-namespace:ScreenShotApp.ViewModels">
+             xmlns:vm="clr-namespace:ScreenShotApp.ViewModels"
+			 xmlns:util="clr-namespace:ScreenShotApp.Utils">
     <Application.Resources>
 		<ResourceDictionary>
 			<ResourceDictionary.MergedDictionaries>
@@ -11,10 +12,15 @@
 					<!--View models' instances-->
 					<vm:RootViewModel x:Key="RootViewModel"></vm:RootViewModel>
 
+					<!--Converters-->
+					<util:BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"></util:BooleanToVisibilityConverter>
 				</ResourceDictionary>
-				<!--Load styles from shared project-->
-				<ResourceDictionary Source="pack://application:,,,/ScreenShotWindows;component/Themes/Generic.xaml">
-				</ResourceDictionary>
+				<!--Load styles-->
+				<ResourceDictionary Source="pack://application:,,,/ScreenShotWindows;component/Themes/Generic.xaml"></ResourceDictionary>
+				<ResourceDictionary Source="pack://application:,,,/ScreenShotApp;component/Themes/Generic.xaml"></ResourceDictionary>
+				<ResourceDictionary Source="pack://application:,,,/ScreenShotApp;component/Themes/Colors/DefaultColorTheme.xaml"></ResourceDictionary>
+				<!--Icon path-->
+				<ResourceDictionary Source="pack://application:,,,/ScreenShotApp;component/Themes/Icons.xaml"></ResourceDictionary>
 			</ResourceDictionary.MergedDictionaries>
 		</ResourceDictionary>
     </Application.Resources>

@@ -7,6 +7,7 @@ using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Text;
+using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
@@ -15,6 +16,7 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
+using System.Windows.Media.Animation;
 
 namespace ScreenShotApp
 {
@@ -27,6 +29,13 @@ namespace ScreenShotApp
 		{
 			InitializeComponent();
 			DataContext = this;
+			//var targetScreen = System.Windows.Forms.Screen.AllScreens.Where(s => !s.Primary).FirstOrDefault();
+			//this.WindowStartupLocation = WindowStartupLocation.Manual;
+			//this.Left = targetScreen.Bounds.Left;
+			//this.Top = targetScreen.Bounds.Top;
+			//this.Width = targetScreen.Bounds.Width;
+			//this.Height = targetScreen.Bounds.Height;
+
 		}
 
 		public event PropertyChangedEventHandler PropertyChanged;
@@ -77,7 +86,13 @@ namespace ScreenShotApp
 			sb.Append($"Raw dpi is {ScreenInformations.RawDpi}");
 			sb.Append(Environment.NewLine);
 
-			tb_screenInfo.Text = sb.ToString();
+			//tb_screenInfo.Text = sb.ToString();
+
+			//Storyboard stb = TryFindResource("WhtieDipStoryBoard") as Storyboard;
+			//Storyboard.SetTarget(stb,ic_White);
+			//Storyboard.SetTargetProperty(stb, new PropertyPath("Opacity"));
+			//stb.Begin();
+
 		}
 	}
 

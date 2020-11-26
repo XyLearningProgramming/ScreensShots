@@ -1,4 +1,5 @@
-﻿using System;
+﻿using ScreenShotApp.ViewModels;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -18,7 +19,7 @@ namespace ScreenShotApp
 	/// <summary>
 	/// Interaction logic for MainWindow.xaml
 	/// </summary>
-	public partial class StartUpWindow : Window
+	public partial class StartUpWindow : WindowBase
 	{
 		public StartUpWindow()
 		{
