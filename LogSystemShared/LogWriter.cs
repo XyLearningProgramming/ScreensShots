@@ -41,11 +41,13 @@ namespace LogSystemShared
 		public static string LogFileName { get; }
 		public static string MessageQueueName { get; }
 		public static TimeSpan ConsumerTick;
+		public static int LogsKeepingDays;
 		static Constants()
 		{
 			LogFileName = Path.Combine(System.AppDomain.CurrentDomain.BaseDirectory, "Logs", DateTime.Now.ToString("yyyy_MM_dd")+ ".log");
 			MessageQueueName = $@".\PRIVATE$\msmq";
 			ConsumerTick = TimeSpan.FromSeconds(0.1);
+			LogsKeepingDays = 30;
 		}
 	}
 
@@ -122,6 +124,35 @@ namespace LogSystemShared
 					{
 						Directory.CreateDirectory(dir);
 					}
+					else
+					{
+						// delete some logs over than certain days
+						try
+						{
+							List<string> logsToDelete = new List<string>();
+							foreach(var logName in Directory.EnumerateFiles(dir, ".log", SearchOption.AllDirectories))
+							{
+								var logDate = DateTime.Parse(Path.GetFileNameWithoutExtension(logName));
+								if((DateTime.Now - logDate).Days>= Constants.LogsKeepingDays)
+								{
+									logsToDelete.Add(logName);
+								}
+							}
+							foreach(string file in logsToDelete)
+							{
+								File.Delete(file);
+								LogWriter.WriteLine(file, "Delete old log: ");
+							}
+						}
+						catch (Exception e)
+						{
+							LogWriter.WriteLine(e.Message, "Error enumerating old logs");
+						}
+					}
+				}
+				else
+				{
+					// if log file doesn't exist 
 					File.Create(Constants.LogFileName);
 				}
 				_token = new CancellationTokenSource();

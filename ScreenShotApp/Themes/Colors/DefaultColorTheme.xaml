@@ -3,6 +3,8 @@
                     xmlns:s="clr-namespace:System;assembly=mscorlib"
                     >
 	<s:Double x:Key="Element.Opacity">0.8</s:Double>
+
+	<SolidColorBrush x:Key="IconDefaultBrush" Color="#FF202020"></SolidColorBrush>
 	<!-- Element.Foreground 
     Element.Foreground.Gray112(keygesture)
     Brush.Button.Background 
@@ -22,6 +24,12 @@
     Brush.Button.Paypal.Border.Pressed
     Brush.Button.Paypal.Foreground
     -->
+
+	<SolidColorBrush x:Key="Panel.Background" Color="#FFFFFFFF"/>
+	<SolidColorBrush x:Key="Panel.Background.Level2" Color="#FFFAFAFA"/>
+	<SolidColorBrush x:Key="Panel.Background.Level3" Color="WhiteSmoke"/>
+	<SolidColorBrush x:Key="Panel.Background.Level4" Color="#FFF9F9FF"/>
+
 	<SolidColorBrush x:Key="Element.Background" Color="#FFFFFFFF"/>
 	<SolidColorBrush x:Key="Element.Background.Hover" Color="#FFD5E1F2"/>
 	<SolidColorBrush x:Key="Element.Background.Focused" Color="#FFF1F1F1"/>

@@ -1,0 +1,483 @@
+﻿using System;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Globalization;
+using System.Text;
+using System.Text.RegularExpressions;
+using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Input;
+
+namespace ScreenShotWindows.Controls
+{
+	public class PixIntegerBox: TextBox
+	{
+        #region Dependency Properties
+
+        public static readonly DependencyProperty AllowSpacingyProperty = DependencyProperty.Register(nameof(AllowSpacing), typeof(bool), typeof(PixIntegerBox), new PropertyMetadata(true));
+
+        public static readonly DependencyProperty WatermarkProperty = DependencyProperty.Register(nameof(Watermark), typeof(string), typeof(PixIntegerBox), new PropertyMetadata(""));
+
+        public static readonly DependencyProperty IsObligatoryProperty = DependencyProperty.Register(nameof(IsObligatory), typeof(bool), typeof(PixIntegerBox));
+
+        public static readonly DependencyProperty AllowedCharactersProperty = DependencyProperty.Register(nameof(AllowedCharacters), typeof(string), typeof(PixIntegerBox));
+
+        #endregion
+
+        #region Properties
+
+        [Bindable(true), Category("Common")]
+        public bool AllowSpacing
+        {
+            get => (bool)GetValue(AllowSpacingyProperty);
+            set => SetValue(AllowSpacingyProperty, value);
+        }
+
+        [Bindable(true), Category("Common")]
+        public string Watermark
+        {
+            get => (string)GetValue(WatermarkProperty);
+            set => SetValue(WatermarkProperty, value);
+        }
+
+        [Bindable(true), Category("Common")]
+        public bool IsObligatory
+        {
+            get => (bool)GetValue(IsObligatoryProperty);
+            set => SetValue(IsObligatoryProperty, value);
+        }
+
+        /// <summary>
+        /// When this property has any character, the input text will be only accepted if the character is present in the list of allowed chars.
+        /// </summary>
+        [Bindable(true), Category("Common")]
+        public string AllowedCharacters
+        {
+            get => (string)GetValue(AllowedCharactersProperty);
+            set => SetValue(AllowedCharactersProperty, value);
+        }
+
+        #endregion
+
+        static PixIntegerBox()
+        {
+            DefaultStyleKeyProperty.OverrideMetadata(typeof(PixIntegerBox), new FrameworkPropertyMetadata(typeof(PixIntegerBox)));
+        }
+
+        public override void OnApplyTemplate()
+        {
+            base.OnApplyTemplate();
+
+            AddHandler(DataObject.PastingEvent, new DataObjectPastingEventHandler(OnPasting));
+        }
+
+        protected override void OnPreviewKeyDown(KeyEventArgs e)
+        {
+            if(!AllowSpacing && e.Key == Key.Space)
+            {
+                e.Handled = true;
+                return;
+            }
+
+            base.OnPreviewKeyDown(e);
+        }
+
+        public bool IsNullOrWhiteSpace()
+        {
+            return string.IsNullOrWhiteSpace(Text);
+        }
+
+        public bool IsNullOrEmpty()
+        {
+            return string.IsNullOrEmpty(Text);
+        }
+
+        public string Trim()
+        {
+            return Text.Trim();
+        }
+
+        private static bool _ignore;
+
+        /// <summary>
+        /// To avoid losing decimals.
+        /// </summary>
+        public bool UseTemporary;
+        public double Temporary;
+
+        /// <summary>
+        /// True if it's necessary to prevent the value changed event from firing.
+        /// </summary>
+        public bool IgnoreValueChanged { get; set; }
+
+        #region Dependency Property
+
+        public static readonly DependencyProperty MaximumProperty = DependencyProperty.Register(nameof(Maximum), typeof(int), typeof(PixIntegerBox),
+            new FrameworkPropertyMetadata(int.MaxValue, OnMaximumPropertyChanged));
+
+        public static readonly DependencyProperty ValueProperty = DependencyProperty.Register(nameof(Value), typeof(int), typeof(PixIntegerBox),
+            new FrameworkPropertyMetadata(0, OnValuePropertyChanged));
+
+        public static readonly DependencyProperty MinimumProperty = DependencyProperty.Register(nameof(Minimum), typeof(int), typeof(PixIntegerBox),
+            new FrameworkPropertyMetadata(0, OnMinimumPropertyChanged));
+
+        public static readonly DependencyProperty StepProperty = DependencyProperty.Register(nameof(StepValue), typeof(int), typeof(PixIntegerBox),
+            new FrameworkPropertyMetadata(1));
+
+        public static readonly DependencyProperty OffsetProperty = DependencyProperty.Register(nameof(Offset), typeof(int), typeof(PixIntegerBox),
+            new FrameworkPropertyMetadata(0, OnOffsetPropertyChanged));
+
+        public static readonly DependencyProperty ScaleProperty = DependencyProperty.Register(nameof(Scale), typeof(double), typeof(PixIntegerBox),
+            new PropertyMetadata(1d, OnScalePropertyChanged));
+
+        public static readonly DependencyProperty UpdateOnInputProperty = DependencyProperty.Register(nameof(UpdateOnInput), typeof(bool), typeof(PixIntegerBox),
+            new FrameworkPropertyMetadata(false, OnUpdateOnInputPropertyChanged));
+
+        public static readonly DependencyProperty DefaultValueIfEmptyProperty = DependencyProperty.Register(nameof(DefaultValueIfEmpty), typeof(int), typeof(PixIntegerBox),
+            new FrameworkPropertyMetadata(0));
+
+        public static readonly DependencyProperty PropagateWheelEventProperty = DependencyProperty.Register(nameof(PropagateWheelEvent), typeof(bool), typeof(PixIntegerBox), new PropertyMetadata(default(bool)));
+
+        #endregion
+
+        #region Property Accessor
+
+        [Bindable(true), Category("Common")]
+        public int Maximum
+        {
+            get => (int)GetValue(MaximumProperty);
+            set => SetValue(MaximumProperty, value);
+        }
+
+        [Bindable(true), Category("Common")]
+        public int Value
+        {
+            get => (int)GetValue(ValueProperty);
+            set => SetValue(ValueProperty, value);
+        }
+
+        [Bindable(true), Category("Common")]
+        public int Minimum
+        {
+            get => (int)GetValue(MinimumProperty);
+            set => SetValue(MinimumProperty, value);
+        }
+
+        /// <summary>
+        /// The Increment/Decrement value.
+        /// </summary>
+        [Description("The Increment/Decrement value.")]
+        public int StepValue
+        {
+            get => (int)GetValue(StepProperty);
+            set => SetValue(StepProperty, value);
+        }
+
+        [Bindable(true), Category("Common")]
+        public int Offset
+        {
+            get => (int)GetValue(OffsetProperty);
+            set => SetValue(OffsetProperty, value);
+        }
+
+        [Bindable(true), Category("Common")]
+        public double Scale
+        {
+            get => (double)GetValue(ScaleProperty);
+            set => SetValue(ScaleProperty, value);
+        }
+
+        [Bindable(true), Category("Common")]
+        public bool UpdateOnInput
+        {
+            get => (bool)GetValue(UpdateOnInputProperty);
+            set => SetValue(UpdateOnInputProperty, value);
+        }
+
+        [Bindable(true), Category("Common")]
+        public int DefaultValueIfEmpty
+        {
+            get => (int)GetValue(DefaultValueIfEmptyProperty);
+            set => SetValue(DefaultValueIfEmptyProperty, value);
+        }
+
+        /// <summary>
+        /// True if the wheel events should not be set as handled.
+        /// </summary>
+        [Bindable(true), Category("Behavior")]
+        public bool PropagateWheelEvent
+        {
+            get => (bool)GetValue(PropagateWheelEventProperty);
+            set => SetValue(PropagateWheelEventProperty, value);
+        }
+
+        #endregion
+
+        #region Properties Changed
+
+        private static void OnMaximumPropertyChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+        {
+            var intBox = d as PixIntegerBox;
+
+            if(intBox?.Value + intBox?.Offset > intBox?.Maximum)
+                intBox.Value = intBox.Maximum + intBox.Offset;
+        }
+
+        private static void OnValuePropertyChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+        {
+            if(!(d is PixIntegerBox box) || _ignore)
+                return;
+
+            _ignore = true;
+
+            if(box.Value + box.Offset > box.Maximum)
+            {
+                box.UseTemporary = false;
+                box.Temporary = (box.Maximum / box.Scale) + box.Offset;
+                box.Value = box.Maximum + box.Offset;
+            }
+
+            if(box.Value + box.Offset < box.Minimum)
+            {
+                box.UseTemporary = false;
+                box.Temporary = (box.Minimum / box.Scale) + box.Offset;
+                box.Value = box.Minimum + box.Offset;
+            }
+
+            _ignore = false;
+
+            var value = ((int)Math.Round(((box.UseTemporary ? box.Temporary : box.Value) - box.Offset) * box.Scale, MidpointRounding.ToEven)).ToString();
+
+            if(!string.Equals(box.Text, value))
+                box.Text = value;
+
+            if(!box.IgnoreValueChanged)
+                box.RaiseValueChangedEvent();
+        }
+
+        private static void OnMinimumPropertyChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+        {
+            var intBox = d as PixIntegerBox;
+
+            if(intBox?.Value + intBox?.Offset < intBox?.Minimum)
+                intBox.Value = intBox.Minimum + intBox.Offset;
+        }
+
+        private static void OnUpdateOnInputPropertyChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+        {
+            ((PixIntegerBox)d).UpdateOnInput = (bool)e.NewValue;
+        }
+
+        private static void OnOffsetPropertyChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+        {
+            var intBox = d as PixIntegerBox;
+
+            if(intBox == null) return;
+
+            //The offset value dictates the value being displayed.
+            //For example, The value 600 and the Offset 20 should display the text 580.
+            //Text = Value - Offset.
+
+            intBox.Text = ((int)Math.Round((intBox.Value - intBox.Offset) * intBox.Scale)).ToString();
+        }
+
+        private static void OnScalePropertyChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+        {
+            var intBox = d as PixIntegerBox;
+
+            if(intBox == null) return;
+
+            //The scale value dictates the value being displayed.
+            //For example, The value 600 and the scale 1.25 should display the text 750.
+            //Text = Value * Scale.
+
+            intBox.Text = ((int)Math.Round((intBox.Value - intBox.Offset) * intBox.Scale)).ToString();
+        }
+
+        #endregion
+
+        #region Custom Events
+
+        /// <summary>
+        /// Create a custom routed event by first registering a RoutedEventID, this event uses the bubbling routing strategy.
+        /// </summary>
+        public static readonly RoutedEvent ValueChangedEvent = EventManager.RegisterRoutedEvent("ValueChanged", RoutingStrategy.Bubble, typeof(RoutedEventHandler), typeof(PixIntegerBox));
+
+        /// <summary>
+        /// Event raised when the numeric value is changed.
+        /// </summary>
+        public event RoutedEventHandler ValueChanged
+        {
+            add => AddHandler(ValueChangedEvent, value);
+            remove => RemoveHandler(ValueChangedEvent, value);
+        }
+
+        public void RaiseValueChangedEvent()
+        {
+            if(ValueChangedEvent == null || !IsLoaded)
+                return;
+
+            var newEventArgs = new RoutedEventArgs(ValueChangedEvent);
+            RaiseEvent(newEventArgs);
+        }
+
+        #endregion
+
+        #region Overrides
+
+        protected override void OnInitialized(EventArgs e)
+        {
+            base.OnInitialized(e);
+
+            Text = ((int)((Value - Offset) * Scale)).ToString();
+        }
+
+        protected override void OnGotFocus(RoutedEventArgs e)
+        {
+            base.OnGotFocus(e);
+
+            if(e.Source is PixIntegerBox)
+                SelectAll();
+        }
+
+        protected override void OnPreviewMouseLeftButtonDown(MouseButtonEventArgs e)
+        {
+            //Only sets the focus if not clicking on the Up/Down buttons of a IntegerUpDown.
+            if(e.OriginalSource is TextBlock || e.OriginalSource is Border)
+                return;
+
+            if(!IsKeyboardFocusWithin)
+            {
+                e.Handled = true;
+                Focus();
+            }
+        }
+
+        protected override void OnPreviewTextInput(TextCompositionEventArgs e)
+        {
+            if(string.IsNullOrEmpty(e.Text))
+            {
+                e.Handled = true;
+                return;
+            }
+
+            if(!IsEntryAllowed(e.Text))
+            {
+                e.Handled = true;
+                return;
+            }
+
+            base.OnPreviewTextInput(e);
+        }
+
+        protected override void OnTextChanged(TextChangedEventArgs e)
+        {
+            if(!UpdateOnInput || string.IsNullOrEmpty(Text) || !IsTextAllowed(Text))
+                return;
+
+            //The offset value dictates the value being displayed.
+            //For example, The value 600 and the Offset 20 should display the text 580.
+            //Value = (Text + Offset) * Scale.
+
+            Temporary = Convert.ToInt32(Text, CultureInfo.CurrentUICulture) / Scale + Offset;
+            Value = (int)Temporary;
+
+            base.OnTextChanged(e);
+        }
+
+        protected override void OnLostFocus(RoutedEventArgs e)
+        {
+            base.OnLostFocus(e);
+
+            if(!UpdateOnInput)
+            {
+                if(string.IsNullOrEmpty(Text) || !IsTextAllowed(Text))
+                {
+                    Value = DefaultValueIfEmpty;
+                    return;
+                }
+
+                //The offset value dictates the value being displayed.
+                //For example, The value 600 and the Offset 20 should display the text 580.
+                //Value = Text + Offset.
+                UseTemporary = true;
+                Temporary = Convert.ToInt32(Text, CultureInfo.CurrentUICulture) / Scale + Offset;
+                Value = (int)Math.Round(Temporary);
+                UseTemporary = false;
+                return;
+            }
+
+            //The offset value dictates the value being displayed.
+            //For example, The value 600 and the Offset 20 should display the text 580.
+            //Text = Value - Offset.
+
+            Text = ((int)((Value - Offset) * Scale)).ToString();
+        }
+
+        protected override void OnKeyDown(KeyEventArgs e)
+        {
+            if(e.Key == Key.Enter || e.Key == Key.Return)
+            {
+                e.Handled = true;
+                MoveFocus(new TraversalRequest(FocusNavigationDirection.Next));
+            }
+
+            base.OnKeyDown(e);
+        }
+
+        protected override void OnMouseWheel(MouseWheelEventArgs e)
+        {
+            base.OnMouseWheel(e);
+
+            var step = Keyboard.Modifiers == (ModifierKeys.Shift | ModifierKeys.Control)
+                ? 50 : Keyboard.Modifiers == ModifierKeys.Shift
+                    ? 10 : Keyboard.Modifiers == ModifierKeys.Control
+                        ? 5 : StepValue;
+
+            Value = e.Delta > 0 ?
+                Math.Min(Maximum + Offset, Value + step) :
+                Math.Max(Minimum + Offset, Value - step);
+
+            e.Handled = !PropagateWheelEvent;
+        }
+
+        #endregion
+
+        #region Base Properties Changed
+
+        private void OnPasting(object sender, DataObjectPastingEventArgs e)
+        {
+            if(e.DataObject.GetDataPresent(typeof(string)))
+            {
+                var text = e.DataObject.GetData(typeof(string)) as string;
+
+                if(!IsTextAllowed(text))
+                    e.CancelCommand();
+            }
+            else
+            {
+                e.CancelCommand();
+            }
+        }
+
+        #endregion
+
+        #region Methods
+
+        private bool IsEntryAllowed(string text)
+        {
+            //Only numbers.
+            var regex = new Regex(@"^-|[0-9]$");
+
+            //Checks if it's a valid char based on the context.
+            return regex.IsMatch(text);
+        }
+
+        private bool IsTextAllowed(string text)
+        {
+            return Minimum < 0 ? Regex.IsMatch(text, @"^[-]?(?:[0-9]{1,9})?$") : Regex.IsMatch(text, @"^(?:[0-9]{1,9})?$");
+        }
+
+        #endregion
+    }
+}

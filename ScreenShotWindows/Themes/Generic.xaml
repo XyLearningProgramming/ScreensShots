@@ -3,7 +3,9 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:local="clr-namespace:ScreenShotWindows">
 	<ResourceDictionary.MergedDictionaries>
+		<ResourceDictionary Source="pack://application:,,,/ScreenShotWindows;component/Themes/ToolbarIcons.xaml"></ResourceDictionary>
 		<ResourceDictionary Source="pack://application:,,,/ScreenShotWindows;component/Themes/ScreensShotWindows.xaml"></ResourceDictionary>
 		<ResourceDictionary Source="pack://application:,,,/ScreenShotWindows;component/Themes/WhiteDipWindow.xaml"></ResourceDictionary>
+		<ResourceDictionary Source="pack://application:,,,/ScreenShotWindows;component/Themes/PixIntegerBox.xaml"></ResourceDictionary>
 	</ResourceDictionary.MergedDictionaries>
 </ResourceDictionary>

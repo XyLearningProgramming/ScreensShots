@@ -10,6 +10,10 @@
 		</ResourceDictionary>
 		<ResourceDictionary Source="pack://application:,,,/ScreenShotApp;component/Themes/KeyBox.xaml">
 		</ResourceDictionary>
+		<ResourceDictionary Source="pack://application:,,,/ScreenShotApp;component/Themes/ExtendedTextBox.xaml">
+		</ResourceDictionary>
+		<ResourceDictionary Source="pack://application:,,,/ScreenShotApp;component/Themes/ExtendedCheckBox.xaml">
+		</ResourceDictionary>
 		<ResourceDictionary>
 			<Style x:Key="Style.FocusVisual.NoMargin">
 				<Setter Property="Control.Template">
@@ -289,7 +293,7 @@
 			</Style>
 
 			<Style x:Key="ExpanderModernDefaultStyle" TargetType="{x:Type Expander}">
-				<Setter Property="Foreground" Value="Black"/>
+				<Setter Property="Foreground" Value="{DynamicResource Element.Foreground}"/>
 				<Setter Property="Background" Value="Transparent"/>
 				<Setter Property="HorizontalContentAlignment" Value="Stretch"/>
 				<Setter Property="VerticalContentAlignment" Value="Stretch"/>
@@ -335,6 +339,89 @@
 								</Trigger>
 								<Trigger Property="IsEnabled" Value="False">
 									<Setter Property="Foreground" Value="{DynamicResource {x:Static SystemColors.GrayTextBrushKey}}"/>
+								</Trigger>
+							</ControlTemplate.Triggers>
+						</ControlTemplate>
+					</Setter.Value>
+				</Setter>
+			</Style>
+
+			<!--Checkbox-->
+			<!--ExtendedCheckBox Style-->
+			<Style TargetType="{x:Type CheckBox}">
+				<Setter Property="Background" Value="{DynamicResource Element.Background}"/>
+				<Setter Property="BorderBrush" Value="{DynamicResource Element.Border}"/>
+				<Setter Property="Foreground" Value="{DynamicResource Element.Foreground.Medium}"/>
+				<Setter Property="BorderThickness" Value="1"/>
+				<Setter Property="VerticalAlignment" Value="Center"/>
+				<Setter Property="SnapsToDevicePixels" Value="True"/>
+				<Setter Property="Padding" Value="4,0,0,0"/>
+				<Setter Property="FocusVisualStyle" Value="{DynamicResource Style.FocusVisual.NoMargin}"/>
+
+				<Setter Property="Template">
+					<Setter.Value>
+						<ControlTemplate TargetType="{x:Type CheckBox}">
+							<Grid x:Name="templateRoot" Background="Transparent">
+								<Grid.ColumnDefinitions>
+									<ColumnDefinition Width="Auto"/>
+									<ColumnDefinition Width="*"/>
+								</Grid.ColumnDefinitions>
+
+								<Border x:Name="checkBoxBorder" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" 
+                                Background="{TemplateBinding Background}" HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}" 
+                                Margin="1" VerticalAlignment="{TemplateBinding VerticalContentAlignment}">
+									<Grid x:Name="markGrid">
+										<Path x:Name="optionMark" Data="F1 M 9.97498,.8 L 4.6983,9.09834  L 1,5.19331 L 1.27664,3.52165 L 4.255,6.08833 L 9.33331,1.288e-005 Z" Fill="{DynamicResource Element.Glyph}" Margin="1" Opacity="0" Stretch="None"/>
+										<Rectangle x:Name="indeterminateMark" Fill="{DynamicResource Element.Glyph}" Margin="2" Opacity="0"/>
+									</Grid>
+								</Border>
+
+								<TextBlock Grid.Column="1" x:Name="MainTextBlock" Focusable="False" Margin="{TemplateBinding Padding}"
+                                   HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}" VerticalAlignment="{TemplateBinding VerticalContentAlignment}" Padding="0,-1,0,0"
+								   Text="{TemplateBinding Content}">
+								</TextBlock>
+							</Grid>
+
+							<ControlTemplate.Triggers>
+								<Trigger Property="HasContent" Value="True">
+									<Setter Property="FocusVisualStyle">
+										<Setter.Value>
+											<Style>
+												<Setter Property="Control.Template">
+													<Setter.Value>
+														<ControlTemplate>
+															<Rectangle Margin="14,0,0,0" SnapsToDevicePixels="True" Stroke="{DynamicResource Element.Foreground}" StrokeThickness="1" StrokeDashArray="1 2"/>
+														</ControlTemplate>
+													</Setter.Value>
+												</Setter>
+											</Style>
+										</Setter.Value>
+									</Setter>
+
+									<Setter Property="Padding" Value="4,-1,0,0"/>
+								</Trigger>
+								<Trigger Property="IsMouseOver" Value="True">
+									<Setter Property="Background" TargetName="checkBoxBorder" Value="{DynamicResource Element.Background.Hover}"/>
+									<Setter Property="BorderBrush" TargetName="checkBoxBorder" Value="{DynamicResource Element.Border.Hover}"/>
+									<Setter Property="Fill" TargetName="optionMark" Value="{DynamicResource Element.Glyph.Hover}"/>
+									<Setter Property="Fill" TargetName="indeterminateMark" Value="{DynamicResource Element.Glyph.Hover}"/>
+								</Trigger>
+								<Trigger Property="IsPressed" Value="True">
+									<Setter Property="Background" TargetName="checkBoxBorder" Value="{DynamicResource Element.Background.Pressed}"/>
+									<Setter Property="BorderBrush" TargetName="checkBoxBorder" Value="{DynamicResource Element.Border.Pressed}"/>
+									<Setter Property="Fill" TargetName="optionMark" Value="{DynamicResource Element.Glyph.Pressed}"/>
+									<Setter Property="Fill" TargetName="indeterminateMark" Value="{DynamicResource Element.Glyph.Pressed}"/>
+								</Trigger>
+								<Trigger Property="IsChecked" Value="True">
+									<Setter Property="Opacity" TargetName="optionMark" Value="1"/>
+									<Setter Property="Opacity" TargetName="indeterminateMark" Value="0"/>
+								</Trigger>
+								<Trigger Property="IsChecked" Value="{x:Null}">
+									<Setter Property="Opacity" TargetName="optionMark" Value="0"/>
+									<Setter Property="Opacity" TargetName="indeterminateMark" Value="1"/>
+								</Trigger>
+								<Trigger Property="IsEnabled" Value="False">
+									<Setter Property="Opacity" Value="0.7"/>
 								</Trigger>
 							</ControlTemplate.Triggers>
 						</ControlTemplate>

@@ -21,6 +21,7 @@ namespace ScreenShotApp.ViewModels
 		private OptionsWindowViewModel optionsWindowViewModel;
 		private bool _isCapturing = false;
 		private List<IMyWindows> _myWindowsStates = new List<IMyWindows>();
+		private ScreenShot _onlyScreenShot;
 		//private Dictionary<IMyWindows, Style> _myWindowsStyle = new Dictionary<IMyWindows, Style>(); // change win style to null to cancel the minimize and max animation
 		#endregion
 
@@ -32,6 +33,17 @@ namespace ScreenShotApp.ViewModels
 		#region constructors
 		public RootViewModel()
 		{
+			// read resolution preferred settings and force change them 
+			foreach(var screen in System.Windows.Forms.Screen.AllScreens)
+			{
+				var info = UserSettingsManager.Instance.GetPreferredResolution(screen.DeviceName);
+				if(info == null) continue;
+				else
+				{
+					UserSettingsStruct.ScreenResolutionInferrer.ForceChangeStoredResolution(screen, info.Resolution.width, info.Resolution.height);
+				}
+			}
+
 			startUpWindowViewModel = new StartUpWindowViewModel(this);
 			optionsWindowViewModel = new OptionsWindowViewModel(this);
 		}
@@ -40,14 +52,17 @@ namespace ScreenShotApp.ViewModels
 		#region methods
 		private void CaptureWindowCloseCallback(object sender, EventArgs e)
 		{
-			_isCapturing = false;
-			foreach(var pr in _myWindowsStates)
+			if(_onlyScreenShot!=null && sender is ScreenShot sh && sh == _onlyScreenShot)
 			{
-				pr.Normalize();
+				_isCapturing = false;
+				foreach(var pr in _myWindowsStates)
+				{
+					pr.TryRestoreWindowState();
+				}
+				//_myWindowsStyle.Clear();
+				ScreenShot.AllClosed -= CaptureWindowCloseCallback;
+				((App)Application.Current).RehookCurrentShortcuts();
 			}
-			//_myWindowsStyle.Clear();
-			ScreenShot.AllClosed -= CaptureWindowCloseCallback;
-			((App)Application.Current).RehookCurrentShortcuts();
 		}
 		#endregion
 
@@ -66,6 +81,7 @@ namespace ScreenShotApp.ViewModels
 							 startup.Loaded += this.StartUpWindowViewModel.OnWindowLoaded;
 							 startup.Closed += this.StartUpWindowViewModel.OnWindowClosed;
 							 startup.Closed += (s, e) => { _myWindowsStates.Remove(startup); };
+							 startup.Closed += (s, e) => { App.TryExit(); }; // check if can exit
 							 startup.Show();
 
 							 _myWindowsStates.Add(startup);
@@ -78,6 +94,7 @@ namespace ScreenShotApp.ViewModels
 							 }
 						 }
 					 })); }
+
 		private DelegateCommand _openOptionsWindow;
 		public DelegateCommand OpenOptionsWindow
 		{
@@ -90,12 +107,14 @@ namespace ScreenShotApp.ViewModels
 				{
 					// default: start from the startup window with button
 					opWin = new OptionWindow();
+					// opWin.Owner = Application.Current.Windows.OfType<StartUpWindow>().FirstOrDefault(); // option window is belonged to the start up one ?? should it?
 					opWin.DataContext = this.OptionsWindowViewModel;
 					opWin.Loaded += this.OptionsWindowViewModel.OnWindowLoaded;
 					opWin.Loaded += (s, e) => ((App)Application.Current).UnhookCurrentShortcuts(); // prevent infinite loop when resetting options
 					opWin.Closed += this.OptionsWindowViewModel.OnWindowClosed;
 					opWin.Closed += (s, e) => { _myWindowsStates.Remove(opWin); };
 					opWin.Closed += (s, e) => ((App)Application.Current).RehookCurrentShortcuts();
+					opWin.Closed += (s, e) => { App.TryExit(); }; // check if can exit
 					opWin.Show();
 
 					_myWindowsStates.Add(opWin);
@@ -110,9 +129,8 @@ namespace ScreenShotApp.ViewModels
 				}));
 		}
 
-		private DelegateCommand _openCaptureWindow;
-		public DelegateCommand OpenCaptureWindow {get => _openCaptureWindow ??
-				(_openCaptureWindow = new DelegateCommand(
+		//private DelegateCommand _openCaptureWindow;
+		public DelegateCommand OpenCaptureWindow {get => new DelegateCommand(
 					(_) =>
 					{
 						_isCapturing = true;
@@ -121,28 +139,29 @@ namespace ScreenShotApp.ViewModels
 						{
 							//_myWindowsStyle.Add(myWindow, myWindow.GetStyle());
 							//myWindow.SetStyle(null);
-							myWindow.Minimize();
+							myWindow.MinimizeWindowState();
 						}
+						_onlyScreenShot = new ScreenShot();
 						ScreenShot.AllClosed += CaptureWindowCloseCallback;
-						ScreenShot ss = new ScreenShot();
 						Task.Delay(150).ContinueWith(_ =>
 					   {
 						   Application.Current.Dispatcher.Invoke(() =>
 						   {
-							   ss.Start(WindowsCaptureScreenTarget.MainScreen, WindowsCaptureMode.Frame, UserSettingsManager.ConstructSettings());
+							   _onlyScreenShot.Start(UserSettingsManager.Instance.UserCaptureScreenTarget, UserSettingsManager.Instance.UserCaptureMode, UserSettingsManager.ConstructSettings());
 						   });
 					   });
 					},
 					(_) => !_isCapturing
-					)); }
+					); }
 
-		private DelegateCommand _openFileExplorer;
-		public DelegateCommand OpenFileExplorer { get => _openFileExplorer ?? (_openFileExplorer = new DelegateCommand(
+		//private DelegateCommand _openFileExplorer;
+		public DelegateCommand OpenFileExplorer { get => new DelegateCommand(
 			(_) => 
 			{
 				string imageFolderPath = UserSettingsManager.Instance.ImagesFolderAbsolutePath;
 				Process.Start("explorer.exe", imageFolderPath);
-			})); }
+			}); }
+
 		#endregion
 	}
 }

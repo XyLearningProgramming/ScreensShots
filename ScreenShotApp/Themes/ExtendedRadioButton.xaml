@@ -49,6 +49,56 @@
 
 			<Trigger Property="IsChecked" Value="True">
 				<Setter Property="Background" Value="{DynamicResource Element.Background.Checked}"/>
+				<Setter Property="FontWeight" Value="SemiBold"></Setter>
+			</Trigger>
+			<Trigger Property="IsMouseOver" Value="True">
+				<Setter Property="Background" Value="{DynamicResource Element.Background.Hover}"/>
+			</Trigger>
+			<Trigger Property="IsPressed" Value="True">
+				<Setter Property="Background" Value="{DynamicResource Element.Background.Pressed}"/>
+			</Trigger>
+		</Style.Triggers>
+	</Style>
+
+	<!--ImageRadioButton • No Icon-->
+	<Style BasedOn="{StaticResource {x:Type RadioButton}}" TargetType="{x:Type n:ExtendedRadioButton}" x:Key="Style.RadioButton.NoIcon">
+		<Setter Property="BorderBrush" Value="Transparent"/>
+		<Setter Property="Background" Value="Transparent"/>
+		<Setter Property="Foreground" Value="{DynamicResource Element.Foreground}"/>
+		<Setter Property="Padding" Value="3,1"/>
+		<Setter Property="HorizontalContentAlignment" Value="Center"/>
+		<Setter Property="FocusVisualStyle" Value="{DynamicResource Style.FocusVisual.NoMargin}"/>
+
+		<Setter Property="Template">
+			<Setter.Value>
+				<ControlTemplate TargetType="{x:Type n:ExtendedRadioButton}">
+					<Border BorderBrush="{TemplateBinding BorderBrush}" Background="{TemplateBinding Background}" BorderThickness="1" Padding="{TemplateBinding Padding}">
+						<Grid MinHeight="{TemplateBinding MinHeight}" Height="{TemplateBinding Height}" Width="{TemplateBinding Width}" SnapsToDevicePixels="True" VerticalAlignment="{TemplateBinding VerticalContentAlignment}">
+							<TextBlock Grid.Column="1" MaxWidth="{Binding Path=ActualWidth,RelativeSource={RelativeSource TemplatedParent}}" 
+                                       HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}" Margin="{TemplateBinding Padding}" 
+                                       VerticalAlignment="Center" Text="{TemplateBinding Text}" 
+                                       TextWrapping="{TemplateBinding TextWrapping}"/>
+						</Grid>
+					</Border>
+				</ControlTemplate>
+			</Setter.Value>
+		</Setter>
+
+		<Style.Triggers>
+			<MultiTrigger>
+				<MultiTrigger.Conditions>
+					<Condition Property="IsChecked" Value="True"/>
+					<Condition Property="IsMouseOver" Value="True"/>
+				</MultiTrigger.Conditions>
+
+				<MultiTrigger.Setters>
+					<Setter Property="BorderBrush" Value="{DynamicResource Element.Border.Pressed}"/>
+					<Setter Property="Background" Value="{DynamicResource Element.Background.Pressed}"/>
+				</MultiTrigger.Setters>
+			</MultiTrigger>
+
+			<Trigger Property="IsChecked" Value="True">
+				<Setter Property="Background" Value="{DynamicResource Element.Background.Checked}"/>
 			</Trigger>
 			<Trigger Property="IsMouseOver" Value="True">
 				<Setter Property="Background" Value="{DynamicResource Element.Background.Hover}"/>
@@ -85,6 +135,57 @@
 					<Condition Property="IsChecked" Value="True"/>
 					<Condition Property="IsMouseOver" Value="True"/>
 				</MultiTrigger.Conditions>
+				<MultiTrigger.Setters>
+					<Setter Property="BorderBrush" Value="{DynamicResource Element.Border.Pressed}"/>
+					<Setter Property="Background" Value="{DynamicResource Element.Background.Pressed}"/>
+				</MultiTrigger.Setters>
+			</MultiTrigger>
+
+			<Trigger Property="IsChecked" Value="True">
+				<Setter Property="Background" Value="{DynamicResource Element.Background.Checked}"/>
+			</Trigger>
+			<Trigger Property="IsMouseOver" Value="True">
+				<Setter Property="Background" Value="{DynamicResource Element.Background.Hover}"/>
+			</Trigger>
+			<Trigger Property="IsPressed" Value="True">
+				<Setter Property="Background" Value="{DynamicResource Element.Background.Pressed}"/>
+			</Trigger>
+		</Style.Triggers>
+	</Style>
+
+	<!--Button • Border • Vertical Image • Text-->
+	<Style TargetType="{x:Type n:ExtendedRadioButton}" BasedOn="{StaticResource {x:Type RadioButton}}" x:Key="Style.RadioButton.Image">
+		<Setter Property="Foreground" Value="{DynamicResource Element.Foreground}"/>
+		<Setter Property="Background" Value="{DynamicResource Brush.Button.Background}"/>
+		<Setter Property="BorderBrush" Value="{DynamicResource Brush.Button.Border}"/>
+		<Setter Property="BorderThickness" Value="1"/>
+		<Setter Property="SnapsToDevicePixels" Value="True"/>
+		<Setter Property="Padding" Value="3,1"/>
+		<Setter Property="HorizontalContentAlignment" Value="Center"/>
+		<Setter Property="VerticalContentAlignment" Value="Center"/>
+		<Setter Property="FocusVisualStyle" Value="{x:Null}"/>
+
+		<Setter Property="Template">
+			<Setter.Value>
+				<ControlTemplate TargetType="{x:Type n:ExtendedRadioButton}">
+					<Border x:Name="MainBorder" BorderBrush="{TemplateBinding BorderBrush}" Height="{TemplateBinding Height}" Width="{TemplateBinding Width}"  BorderThickness="{TemplateBinding BorderThickness}" MinHeight="{TemplateBinding MinHeight}" MinWidth="{TemplateBinding MinWidth}" MaxWidth="{TemplateBinding MaxWidth}" MaxHeight="{TemplateBinding MaxHeight}" Background="{TemplateBinding Background}">
+						<Border x:Name="InnerBorder" Background="Transparent">
+							<ContentPresenter Grid.Row="1"  x:Name="TextBlockInternal" MinWidth="{TemplateBinding ContentWidth}" MinHeight="{TemplateBinding ContentHeight}"
+							HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}" Margin="{TemplateBinding Padding}"
+							VerticalAlignment="{TemplateBinding VerticalContentAlignment}" Effect="{TemplateBinding Effect}"/>
+						</Border>
+					</Border>
+				</ControlTemplate>
+			</Setter.Value>
+		</Setter>
+
+		<Style.Triggers>
+			<MultiTrigger>
+				<MultiTrigger.Conditions>
+					<Condition Property="IsChecked" Value="True"/>
+					<Condition Property="IsMouseOver" Value="True"/>
+				</MultiTrigger.Conditions>
+
 				<MultiTrigger.Setters>
 					<Setter Property="BorderBrush" Value="{DynamicResource Element.Border.Pressed}"/>
 					<Setter Property="Background" Value="{DynamicResource Element.Background.Pressed}"/>

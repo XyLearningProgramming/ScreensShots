@@ -3,10 +3,20 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:local="clr-namespace:ScreenShotApp"
              xmlns:vm="clr-namespace:ScreenShotApp.ViewModels"
-			 xmlns:util="clr-namespace:ScreenShotApp.Utils">
+			 xmlns:util="clr-namespace:ScreenShotApp.Utils"
+			 Startup="Application_Startup" Exit="Application_Exit"
+			 ShutdownMode="OnExplicitShutdown"
+			 >
     <Application.Resources>
 		<ResourceDictionary>
 			<ResourceDictionary.MergedDictionaries>
+				<!--Load styles-->
+				<ResourceDictionary Source="pack://application:,,,/ScreenShotWindows;component/Themes/Generic.xaml"></ResourceDictionary>
+				<ResourceDictionary Source="pack://application:,,,/ScreenShotApp;component/Themes/Generic.xaml"></ResourceDictionary>
+				<ResourceDictionary Source="pack://application:,,,/ScreenShotApp;component/Themes/Colors/DefaultColorTheme.xaml"></ResourceDictionary>
+				<ResourceDictionary Source="pack://application:,,,/ScreenShotApp;component/Themes/Colors/DarkColorTheme.xaml"></ResourceDictionary>
+				<!--Icon path-->
+				<ResourceDictionary Source="pack://application:,,,/ScreenShotApp;component/Themes/Icons.xaml"></ResourceDictionary>
 
 				<ResourceDictionary>
 					<!--View models' instances-->
@@ -14,13 +24,13 @@
 
 					<!--Converters-->
 					<util:BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"></util:BooleanToVisibilityConverter>
+					<util:MultiBooleansToVisibilityConverter x:Key="MultiBooleansToVisibilityConverter"></util:MultiBooleansToVisibilityConverter>
+					<util:WindowCaptureModeToBooleanConverter x:Key="WindowCaptureModeToBooleanConverter"></util:WindowCaptureModeToBooleanConverter>
+					<util:WindowCaptureTargetToBooleanConverter x:Key="WindowCaptureTargetToBooleanConverter"></util:WindowCaptureTargetToBooleanConverter>
+					<util:StringToBooleanConverter x:Key="StringToBooleanConverter"></util:StringToBooleanConverter>
+					<util:MultiResBindingsToBooleanConverter x:Key="MultiResBindingsToBooleanConverter"></util:MultiResBindingsToBooleanConverter>
+					<util:SaveFormatToBooleanConverter x:Key="SaveFormatToBooleanConverter"></util:SaveFormatToBooleanConverter>
 				</ResourceDictionary>
-				<!--Load styles-->
-				<ResourceDictionary Source="pack://application:,,,/ScreenShotWindows;component/Themes/Generic.xaml"></ResourceDictionary>
-				<ResourceDictionary Source="pack://application:,,,/ScreenShotApp;component/Themes/Generic.xaml"></ResourceDictionary>
-				<ResourceDictionary Source="pack://application:,,,/ScreenShotApp;component/Themes/Colors/DefaultColorTheme.xaml"></ResourceDictionary>
-				<!--Icon path-->
-				<ResourceDictionary Source="pack://application:,,,/ScreenShotApp;component/Themes/Icons.xaml"></ResourceDictionary>
 			</ResourceDictionary.MergedDictionaries>
 		</ResourceDictionary>
     </Application.Resources>

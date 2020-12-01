@@ -1,7 +1,8 @@
 ﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
                     xmlns:local="clr-namespace:ScreenShotWindows"
-					xmlns:lconv="clr-namespace:ScreenShotWindows.Utils.Coverters">
+					xmlns:lconv="clr-namespace:ScreenShotWindows.Utils.Coverters"
+					xmlns:ctrl="clr-namespace:ScreenShotWindows.Controls">
 	<!--TODO: make this changeable via struct sending in when construct screenshot window-->
 	<!--4*16% opacity in blend with black color-->
 	<Color x:Key="DarkOpacityColor">#40000000</Color>
@@ -108,10 +109,7 @@
 								</local:GridWithSolidLines>
 								<!--Buttons on the second row-->
 							</Border>
-							<StackPanel x:Name="PART_StackedButtons" Orientation="Horizontal" VerticalAlignment="Top" HorizontalAlignment="Right">
-								<Button>Cancel</Button>
-								<!--TODO add function buttons-->
-							</StackPanel>
+							<local:StackedButtonsUserControl x:Name="PART_StackedButtons"></local:StackedButtonsUserControl>
 
 							<!--Magnifier-->
 							<Border x:Name="PART_Magnifier" IsHitTestVisible="False"

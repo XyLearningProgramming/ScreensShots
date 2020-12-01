@@ -15,8 +15,8 @@ namespace ScreenShotApp.ViewModels
 	{
 		public event PropertyChangedEventHandler PropertyChanged;
 		#region fields
-		private UserSettingsForScreenShotWindows userSettings;
-		private int capturingWindowCount = 0;
+		// private UserSettingsForScreenShotWindows userSettings;
+		// private int capturingWindowCount = 0;
 		private string captureShortcutString = $"{KeyStringHelper.GetSelectKeyText((System.Windows.Input.Key)UserSettingsManager.Instance.CaptureShotcutMainKey, UserSettingsManager.Instance.CaptureShortcutModifierKey,true,true)}";
 		#endregion
 

@@ -36,7 +36,7 @@ namespace ScreenShotWindows
 		{
 			this._currentScreen = screen;
 			this._screenShot = screenShot;
-			this._isInstantClose = userSettings.WhiteDipAnimDuration < AnimationSkipThreshold;
+			this._isInstantClose = userSettings.WhiteDipAnimDuration < AnimationSkipThreshold || !userSettings.IsShowingWhiteDip;
 			this._userSettings = userSettings;
 			this._isSavingToLocal = isSavingToLocal;
 
@@ -107,7 +107,7 @@ namespace ScreenShotWindows
 			Clipboard.SetImage(_cachedSnapShot);
 			if(_isSavingToLocal)
 			{
-				_cachedSnapShot.SaveToLocal(AbsoluteDirectory: _userSettings.ImageFolderPath);
+				_cachedSnapShot.SaveToLocal(AbsoluteDirectory: _userSettings.ImageFolderPath, extension: "."+_userSettings.SaveFormatPreferred);
 			}
 			else
 			{

@@ -19,10 +19,6 @@
 		</Storyboard>
 	</Window.Resources>
 	<Grid>
-		<Grid.ColumnDefinitions>
-			<ColumnDefinition Width="53*"/>
-			<ColumnDefinition Width="747*"/>
-		</Grid.ColumnDefinitions>
 		<!--<Grid.RowDefinitions>
 			<RowDefinition Height="Auto"></RowDefinition>
 			<RowDefinition Height="Auto"></RowDefinition>
@@ -68,6 +64,6 @@
 		<!--TODO add function buttons-->
 		<!--
 		</DockPanel>-->
-		<c:ExtendedButton Grid.ColumnSpan="2" Text="Here"></c:ExtendedButton>
+		
 	</Grid>
 </Window>

@@ -22,7 +22,14 @@ namespace ScreenShotApp.Utils
 			Application.Current.Resources.MergedDictionaries.Remove(target);
 			Application.Current.Resources.MergedDictionaries.Add(target);
 
-			UserSettingsManager.Instance.ColorThemePrefered = theme.ToString();
+			ResourceDictionary iconsDict = Application.Current.Resources.MergedDictionaries.LastOrDefault(s => s.Source != null && s.Source.ToString().Contains($@"/Themes/Icons.xaml"));
+			if(iconsDict != null)
+			{
+				Application.Current.Resources.MergedDictionaries.Remove(iconsDict);
+				Application.Current.Resources.MergedDictionaries.Add(iconsDict);
+			}
+
+			//UserSettingsManager.Instance.ColorThemePrefered = theme.ToString();
 			LogSystemShared.LogWriter.WriteLine($"Switched Theme to {theme}");
 		}
 

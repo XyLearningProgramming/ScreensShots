@@ -16,6 +16,8 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
 using UserSettingsStruct;
+using System.ComponentModel;
+using System.Runtime.CompilerServices;
 
 namespace ScreenShotWindows
 {
@@ -34,7 +36,7 @@ namespace ScreenShotWindows
 	[TemplatePart(Name = ElementTargetArea, Type = typeof(InkCanvas))]
 	[TemplatePart(Name = ElementMagnifier, Type = typeof(FrameworkElement))]
 	[TemplatePart(Name = ElementHintGrid, Type = typeof(GridWithSolidLines))]
-	internal class ScreensShotWindows : System.Windows.Window
+	internal class ScreensShotWindows : System.Windows.Window, INotifyPropertyChanged
 	{
 		#region fields
 		private static readonly Guid BmpGuid = new Guid("{b96b3cab-0728-11d3-9d7b-0000f81ef32e}"); // do not change a bit
@@ -95,6 +97,52 @@ namespace ScreenShotWindows
 		public InteropStructs.RECT TargetAreaRECT { get => new InteropStructs.RECT((int)TargetArea.Margin.Left, (int)TargetArea.Margin.Top, (int)TargetArea.Margin.Left + (int)TargetArea.Width, (int)TargetArea.Margin.Top + (int)TargetArea.Height); }
 		public InteropStructs.RECT ThisRECT { get => new InteropStructs.RECT((int)this.Left, (int)this.Top, (int)this.Left + (int)this.Width, (int)this.Top + (int)this.Height); }
 		public TargetAreaSelectingStatus TargetAreaSelectingStatus { get; set; } = TargetAreaSelectingStatus.Empty;
+
+		#region datacontext 
+		private int _maxIntegerBoxInput = 10000;
+		public int MaxIntegerBoxInput { get => _maxIntegerBoxInput; }
+		private int _minIntegerBoxInput = 5;
+		public int MinIntegerBoxInput { get => _minIntegerBoxInput; }
+		private Visibility _stackedButtonsVisibility = Visibility.Collapsed;
+		public Visibility StackedButtonsVisibility { get => _stackedButtonsVisibility;
+			set => this.Mutate(ref _stackedButtonsVisibility, value, e => PropertyChanged?.Invoke(this, e));
+		}
+		private int _inputWidthValue = 5;
+		public int InputWidthValue 
+		{ 
+			get => _inputWidthValue;
+			set 
+			{ 
+				if(this.Mutate(ref _inputWidthValue, value, e => PropertyChanged?.Invoke(this, e)))
+				{
+					// let commands control this behavior
+
+					//TargetArea.Width = value;
+					//var sizeTmp = TargetAreaSize;
+					//sizeTmp.Width = value;
+					//TargetAreaSize = sizeTmp;
+				}
+			}
+		}
+		private int _inputHeightValue = 5;
+		public int InputHeightValue
+		{
+			get => _inputHeightValue;
+			set
+			{
+				if(this.Mutate(ref _inputHeightValue, value, e => PropertyChanged?.Invoke(this, e)))
+				{
+					//TargetArea.Height = value;
+					//var sizeTmp = TargetAreaSize;
+					//sizeTmp.Height = value;
+					//TargetAreaSize = sizeTmp;
+				}
+			}
+		}
+		public bool SaveScreenShots { set => _saveScreenShots = value; } // only for click via stackedbutton
+		public UserSettingsForScreenShotWindows UserSettings { get => _userSettings; } // only for click via stackedbutton
+		public BitmapImage SnappedImage { get => _desktopSnapShot; } // only for savefilediag vis stackedbutton
+		#endregion
 		#endregion
 
 		#region dependency properties
@@ -137,6 +185,9 @@ namespace ScreenShotWindows
 
 		//hide window as a standalone in task manager
 		public static readonly DependencyProperty ShowInTaskManagerProperty = DependencyProperty.Register("ShowInTaskManager", typeof(bool), typeof(ScreensShotWindows), new PropertyMetadata(true, OnShowInTaskManagerChangedCallback));
+
+		public event PropertyChangedEventHandler PropertyChanged;
+
 		public bool ShowInTaskManager { get => (bool)GetValue(ShowInTaskManagerProperty); set => SetValue(ShowInTaskManagerProperty, value); }
 		#endregion
 
@@ -275,9 +326,21 @@ namespace ScreenShotWindows
 			{
 				InteropStructs.RECT rect = TargetAreaRECT;
 				rect = GetRectAfterScaling(rect);
-				CroppedBitmap image = new CroppedBitmap(_desktopSnapShot, new Int32Rect(rect.Left, rect.Top, rect.Width, rect.Height));
-				image.SaveToLocal(AbsoluteDirectory: _userSettings.ImageFolderPath);
-				Clipboard.SetImage(image);
+				try
+				{
+					CroppedBitmap image = new CroppedBitmap(_desktopSnapShot, new Int32Rect(rect.Left, rect.Top, rect.Width, rect.Height));
+					image.SaveToLocal(AbsoluteDirectory: _userSettings.ImageFolderPath, extension: "." + _userSettings.SaveFormatPreferred);
+					Clipboard.SetImage(image);
+				}
+				catch(Exception e)
+				{
+					LogWriter.WriteLine(e.Message, "Crop error");
+					if(_desktopSnapShot != null)
+					{
+						_desktopSnapShot.SaveToLocal(AbsoluteDirectory: _userSettings.ImageFolderPath, extension: "." + _userSettings.SaveFormatPreferred);
+						Clipboard.SetImage(_desktopSnapShot);
+					}
+				}
 			}
 
 			this.Loaded -= ScreensShotWindowsLoaded;
@@ -312,7 +375,16 @@ namespace ScreenShotWindows
 				{
 					if(OldStatus == ScreenShotWindowStatus.IsDrawing && NewStatus == ScreenShotWindowStatus.IsSelecting)
 					{
-						window._screenShot.OnTargetAreaSelected(window);
+						window._screenShot.OnTargetAreaSelected(window); // call event in screenshot
+						// floating button visibility adjust
+						window.StackedButtonsVisibility = Visibility.Visible;
+						// change floating button input box
+						window.InputHeightValue = Convert.ToInt32(window.TargetArea.Height);
+						window.InputWidthValue = Convert.ToInt32(window.TargetArea.Width);
+					}
+					else if(OldStatus == ScreenShotWindowStatus.IsSelecting && NewStatus!= ScreenShotWindowStatus.IsSelecting)
+					{
+						window.StackedButtonsVisibility = Visibility.Collapsed;
 					}
 				}
 			}
@@ -839,14 +911,26 @@ namespace ScreenShotWindows
 		public InteropStructs.RECT GetRectAfterScaling(InteropStructs.RECT rect)
 		{
 			if(!ScreenResolutionInferrer.IsUsingDifferentDpi(_currentScreen)) return new InteropStructs.RECT(rect);
-			double scaleFactor = ScreenResolutionInferrer.GetScaleFactorFromScreen(_currentScreen);
+			double scaleFactor = ScreenResolutionInferrer.GetInferredScale(_currentScreen);
 			return rect.Scaling(scaleFactor);
 		}
 
 		public InteropStructs.POINT GetPointAfterScaling(InteropStructs.POINT pt)
 		{
 			if(!ScreenResolutionInferrer.IsUsingDifferentDpi(_currentScreen)) return new InteropStructs.POINT(pt);
-			double scaleFactor = ScreenResolutionInferrer.GetScaleFactorFromScreen(_currentScreen);
+			double scaleFactor = ScreenResolutionInferrer.GetInferredScale(_currentScreen);
+			return pt.Scaling(scaleFactor);
+		}
+		public InteropStructs.RECT GetRectBeforeScaling(InteropStructs.RECT rect)
+		{
+			if(!ScreenResolutionInferrer.IsUsingDifferentDpi(_currentScreen)) return new InteropStructs.RECT(rect);
+			double scaleFactor = 1.0/ScreenResolutionInferrer.GetInferredScale(_currentScreen);
+			return rect.Scaling(scaleFactor);
+		}
+		public InteropStructs.POINT GetPointBeforeScaling(InteropStructs.POINT pt)
+		{
+			if(!ScreenResolutionInferrer.IsUsingDifferentDpi(_currentScreen)) return new InteropStructs.POINT(pt);
+			double scaleFactor = 1.0/ScreenResolutionInferrer.GetInferredScale(_currentScreen);
 			return pt.Scaling(scaleFactor);
 		}
 		#endregion
@@ -891,6 +975,24 @@ namespace ScreenShotWindows
 			{
 				LogSystemShared.LogWriter.WriteLine($"Exception occured when saving image: {e.Message}", title: "Save Error");
 			}
+		}
+	}
+
+	/// <summary>
+	/// Extension for all view models. Block changes when field and newValue are the same. If they aren't, raise the action sent in.
+	/// </summary>
+	/// <example>
+	/// if(this.MutateVerbose(ref propertyName, value, e => PropertyChanged?.Invoke(this, e))) 
+	/// {//Then do something}
+	/// </example>
+	public static class NotifyPropertyChangedExtension
+	{
+		public static bool Mutate<TField>(this INotifyPropertyChanged _, ref TField field, TField newValue, Action<PropertyChangedEventArgs> raise, [CallerMemberName] string propertyName = null)
+		{
+			if(EqualityComparer<TField>.Default.Equals(field, newValue)) return false;
+			field = newValue;
+			raise?.Invoke(new PropertyChangedEventArgs(propertyName));
+			return true;
 		}
 	}
 }

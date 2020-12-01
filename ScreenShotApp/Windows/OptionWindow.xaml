@@ -7,8 +7,9 @@
         xmlns:con="clr-namespace:ScreenShotApp.Controls"
 		xmlns:vm="clr-namespace:ScreenShotApp.ViewModels"
         mc:Ignorable="d"
-        Title="OptionWindow" Height="450" Width="800"
+        Title="OPTIONS" Height="450" Width="800"
         d:DataContext="{d:DesignInstance vm:OptionsWindowViewModel, IsDesignTimeCreatable=True}" 
+		Background="{DynamicResource Panel.Background}"
         >
 	<Grid>
 		<Grid.ColumnDefinitions>
@@ -16,7 +17,6 @@
 			<ColumnDefinition Width="*"></ColumnDefinition>
 		</Grid.ColumnDefinitions>
 
-		<ScrollViewer>
 			<StackPanel x:Name="sp_OptionsList" Grid.Column="0" Margin="8">
 				<StackPanel.Resources>
 					<Style BasedOn="{StaticResource {x:Type con:ExtendedRadioButton}}" TargetType="{x:Type con:ExtendedRadioButton}">
@@ -29,30 +29,159 @@
 					</Style>
 				</StackPanel.Resources>
 				<!--Capture mode + related shortcuts-->
-				<con:ExtendedRadioButton x:Name="extrb_CaptureMode" Text="Capture Modes" Icon="{StaticResource appbar_camera_auto}" IsChecked="True"></con:ExtendedRadioButton>
+			<con:ExtendedRadioButton x:Name="extrb_CaptureMode" Text="Modes" Icon="{StaticResource appbar_camera_auto}"></con:ExtendedRadioButton>
 				<!--Manually change screen res inferred-->
-				<con:ExtendedRadioButton x:Name="extrb_ScreenRes" Text="Screens" Icon="{StaticResource appbar_monitor_identify}"></con:ExtendedRadioButton>
+			<con:ExtendedRadioButton x:Name="extrb_ScreenRes" Text="Screens" Icon="{StaticResource appbar_monitor_identify}"></con:ExtendedRadioButton>
 				<!--Color theme choose, other colors-->
-				<con:ExtendedRadioButton x:Name="extrb_Others" Text="Others" Icon="{StaticResource appbar_booklist}"></con:ExtendedRadioButton>
-				<con:ExtendedRadioButton x:Name="extrb_About" Text="About" Icon="{StaticResource appbar_cloud}"></con:ExtendedRadioButton>
+			<con:ExtendedRadioButton x:Name="extrb_Others" Text="Others" Icon="{StaticResource appbar_booklist}"  IsChecked="True"></con:ExtendedRadioButton>
+			<con:ExtendedRadioButton x:Name="extrb_About" Text="About" Icon="{StaticResource appbar_information_circle}"></con:ExtendedRadioButton>
 			</StackPanel>
-		</ScrollViewer>
 
-		<DockPanel x:Name="dp_RightPanel" Grid.Column="1" LastChildFill="False">
+			<DockPanel x:Name="dp_RightPanel" Grid.Column="1" LastChildFill="False">
 			<Grid DockPanel.Dock="Top" x:Name="gr_CaptureMode" Visibility="{Binding ElementName=extrb_CaptureMode, Path=IsChecked, Mode=OneWay, Converter={StaticResource BooleanToVisibilityConverter}}">
-				<Expander Style="{DynamicResource ExpanderModernDefaultStyle}" ExpandDirection="Down" Header="Capture Shortcut" IsExpanded="True">
-					<StackPanel Orientation="Vertical">
-						<Label Content="Capture Keyboard ShortCut"></Label>
+				<Grid.RowDefinitions>
+					<RowDefinition Height="Auto"></RowDefinition>
+					<RowDefinition Height="Auto"></RowDefinition>
+				</Grid.RowDefinitions>
+				<Expander Style="{DynamicResource ExpanderModernDefaultStyle}" ExpandDirection="Down" Header="Shortcuts" IsExpanded="True">
+					<StackPanel Orientation="Vertical" Margin="20,5,0,0">
+						<StackPanel Orientation="Horizontal">
+						<Label Content="Capture Keyboard ShortCut" Margin="0,0,5,0" VerticalAlignment="Center"></Label>
 						<con:KeyBox x:Name="kb_Capture" Height="24" Margin="3" AllowAllKeys="False"
 						ModifierKeys="{Binding CaptureShortcutModifierKey}" MainKey="{Binding CaptureShortcutMainKey}" 
 						HorizontalAlignment="Left" VerticalAlignment="Top"
 						KeyChanged="Global_KeyChanged"></con:KeyBox>
+						</StackPanel>
+					</StackPanel>
+				</Expander>
+
+				<Expander Style="{DynamicResource ExpanderModernDefaultStyle}" Grid.Row="1" ExpandDirection="Down" Header="Capture Settings" IsExpanded="True">
+					<StackPanel Orientation="Vertical" Margin="20,5,0,0">
+						<StackPanel Orientation="Horizontal" Margin="0,0,0,10">
+							<Label Margin="0,0,10,0">Capture Style: </Label>
+							<con:ExtendedRadioButton x:Name="extrd_Frame" Text="FRAME" Icon="{StaticResource appbar_image_broken}" 
+							VerticalAlignment="Center" BorderBrush="Gray" BorderThickness="3"
+							IsChecked="{Binding WindowsCaptureMode, Converter={StaticResource WindowCaptureModeToBooleanConverter}, ConverterParameter=Frame}"></con:ExtendedRadioButton>
+							<con:ExtendedRadioButton x:Name="extrd_Continuous" Text="CONTINUOUS" Icon="{StaticResource appbar_image_multiple}" 
+							IsChecked="{Binding WindowsCaptureMode, Converter={StaticResource WindowCaptureModeToBooleanConverter}, ConverterParameter=Continuous}"></con:ExtendedRadioButton>
+							<CheckBox x:Name="cb_Flashing" VerticalAlignment="Center" IsChecked="{Binding IsShowingWhiteDip}" Visibility="{Binding ElementName=extrd_Continuous, Path=IsChecked, Converter={StaticResource BooleanToVisibilityConverter}}" 
+							Margin="20,0,0,0">Flashing White</CheckBox>
+							
+						</StackPanel>
+						<StackPanel Orientation="Horizontal" Margin="0,0,0,15">
+							<Label Margin="0,0,10,0">Screen Target: </Label>
+							<con:ExtendedRadioButton x:Name="extrd_ManScreen" Text="MAIN" Icon="{StaticResource appbar_monitor}"
+							VerticalAlignment="Center"
+							BorderBrush="Gray" BorderThickness="3" IsChecked="{Binding WindowsCaptureScreenTarget, Converter={StaticResource WindowCaptureTargetToBooleanConverter}, ConverterParameter=MainScreen}"></con:ExtendedRadioButton>
+							<con:ExtendedRadioButton x:Name="extrd_ActiveScreen" Text="ACTIVE" Icon="{StaticResource appbar_monitor_play}" IsChecked="{Binding WindowsCaptureScreenTarget, Converter={StaticResource WindowCaptureTargetToBooleanConverter}, ConverterParameter=ActiveScreen}"></con:ExtendedRadioButton>
+							<con:ExtendedRadioButton x:Name="extrd_ALL" Text="ALL" Icon="{StaticResource appbar_monitor_film}" IsChecked="{Binding WindowsCaptureScreenTarget, Converter={StaticResource WindowCaptureTargetToBooleanConverter}, ConverterParameter=AllScreens}"
+							VerticalAlignment="Center"
+							BorderBrush="Gray" BorderThickness="3"></con:ExtendedRadioButton>
+						</StackPanel>
+						<TextBlock x:Name="tb_DescHeader" Margin="10,0,0,0" HorizontalAlignment="Left">Description: </TextBlock>
+						<StackPanel x:Name="sp_Description">
+							<StackPanel.Resources>
+								<Style TargetType="{x:Type TextBlock}">
+									<Setter Property="Margin" Value="50,0,0,0"></Setter>
+									<Setter Property="HorizontalAlignment" Value="Left"></Setter>
+									<Setter Property="VerticalAlignment" Value="Center"></Setter>
+								</Style>
+							</StackPanel.Resources>
+							<TextBlock Visibility="{Binding ElementName=extrd_Frame, Path=IsChecked, Converter={StaticResource BooleanToVisibilityConverter}}"><Run>Your screen(s) will be</Run> <Run FontWeight="Bold">Freezed</Run> <Run>and It's up to you to choose a</Run> <Run FontWeight="Bold"> Target Area </Run> <Run> to save.</Run></TextBlock>
+							<TextBlock Visibility="{Binding ElementName=extrd_Continuous, Path=IsChecked, Converter={StaticResource BooleanToVisibilityConverter}}"><Run FontWeight="Bold">All</Run> <Run>screen(s) will be saved the moment you click or press shortcut.</Run></TextBlock>
+							<TextBlock><Run>Your screen(s) will dip into </Run> <Run FontWeight="Bold"> White </Run> <Run>shortly as a reminder of successful capture</Run>
+								<TextBlock.Visibility>
+									<MultiBinding Converter="{StaticResource MultiBooleansToVisibilityConverter}">
+										<Binding ElementName="extrd_Continuous" Path="IsChecked"></Binding>
+										<Binding ElementName="cb_Flashing" Path="IsChecked"></Binding>
+									</MultiBinding>
+								</TextBlock.Visibility>
+							</TextBlock>
+							<TextBlock Visibility="{Binding ElementName=extrd_ManScreen, Path=IsChecked, Converter={StaticResource BooleanToVisibilityConverter}}">The main screen is where your <Run FontWeight="Bold"> Desktop </Run> is located. </TextBlock>
+							<TextBlock Visibility="{Binding ElementName=extrd_ActiveScreen, Path=IsChecked, Converter={StaticResource BooleanToVisibilityConverter}}">The active screen is where your <Run FontWeight="Bold"> Mouse </Run> is currently located.</TextBlock>
+							<TextBlock Visibility="{Binding ElementName=extrd_ALL, Path=IsChecked, Converter={StaticResource BooleanToVisibilityConverter}}">All your <Run FontWeight="Bold">Screen(s)/Monitor(s)</Run> are included.</TextBlock>
+						</StackPanel>
 					</StackPanel>
 				</Expander>
 			</Grid>
-			<DockPanel LastChildFill="False" DockPanel.Dock="Bottom">
-				<con:ExtendedButton x:Name="bt_ApplyAll" DockPanel.Dock="Right" Text="Apply" Click="bt_ApplyAll_Click"></con:ExtendedButton>
-				<con:ExtendedButton x:Name="bt_Cancel" DockPanel.Dock="Right" Text="Cancel" Click="bt_Cancel_Click"></con:ExtendedButton>
+
+			<!--Screens Panel-->
+			<Grid DockPanel.Dock="Top" x:Name="gr_ScreensDisplay" Visibility="{Binding ElementName=extrb_ScreenRes, Path=IsChecked, Mode=OneWay, Converter={StaticResource BooleanToVisibilityConverter}}">
+				<Expander Header="Screen Resolution" IsExpanded="True" Style="{StaticResource ExpanderModernDefaultStyle}">
+				<!--ScreensInfo display template-->
+					<ItemsControl ItemsSource="{Binding ScreensInfo}" Margin="20,0,0,0">
+						<ItemsControl.ItemTemplate>
+							<DataTemplate DataType="{x:Type vm:ScreenInfoModel}">
+								<con:ExtendedButton Margin="15,5,15,5" Style="{StaticResource Style.Button.Image}" MaxWidth="340" ContentWidth="300"
+								CommandParameter="{Binding ScreenIndex}"
+								Command="{Binding Path=DataContext.ChooseScreenResolutionCommand, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type ItemsControl}}}">
+									<StackPanel>
+										<Image Source="{Binding SampleShot}" Stretch="Uniform" SnapsToDevicePixels="True" RenderOptions.BitmapScalingMode="NearestNeighbor"></Image>
+										<TextBlock HorizontalAlignment="Center" VerticalAlignment="Center" Text="{Binding DeviceName}"></TextBlock>
+										<TextBlock HorizontalAlignment="Center" VerticalAlignment="Center"><Run FontWeight="SemiBold" Text="{Binding ResolutionString, Mode=OneWay}"/></TextBlock>
+										<!--</Run> Scale: <Run FontWeight="SemiBold" Text="{Binding ScaleFactor, StringFormat={}{0}%}"></Run>-->
+									</StackPanel>
+								</con:ExtendedButton>
+							</DataTemplate>
+						</ItemsControl.ItemTemplate>
+						<ItemsControl.ItemsPanel>
+							<ItemsPanelTemplate>
+								<WrapPanel></WrapPanel>
+							</ItemsPanelTemplate>
+						</ItemsControl.ItemsPanel>
+					</ItemsControl>
+				</Expander>
+			</Grid>
+			<!--Others-->
+			<Grid DockPanel.Dock="Top" x:Name="gr_Others" Visibility="{Binding ElementName=extrb_Others, Path=IsChecked, Mode=OneWay, Converter={StaticResource BooleanToVisibilityConverter}}">
+				<Grid.RowDefinitions>
+					<RowDefinition Height="Auto"></RowDefinition>
+					<RowDefinition Height="Auto"></RowDefinition>
+					<RowDefinition Height="Auto"></RowDefinition>
+				</Grid.RowDefinitions>
+				<Expander Header="Storage" Style="{StaticResource ExpanderModernDefaultStyle}" IsExpanded="True">
+					<StackPanel>
+						<StackPanel Orientation="Horizontal" Margin="20,0,0,5">
+							<TextBlock Text="Save Format: " Foreground="{DynamicResource Element.Foreground}" VerticalAlignment="Center" Margin="0,0,20,0"></TextBlock>
+							<con:ExtendedRadioButton Icon="{DynamicResource appbar_page_png}" Text="PNG" IsChecked="{Binding PreferredSaveFormat, ConverterParameter=png, Converter={StaticResource SaveFormatToBooleanConverter}}"></con:ExtendedRadioButton>
+							<con:ExtendedRadioButton Icon="{DynamicResource appbar_page_jpg}" Text="JPEG" IsChecked="{Binding PreferredSaveFormat, ConverterParameter=jpeg, Converter={StaticResource SaveFormatToBooleanConverter}}"></con:ExtendedRadioButton>
+							<con:ExtendedRadioButton Icon="{DynamicResource appbar_page}" Text="BMP" ContentHeight="23" IsChecked="{Binding PreferredSaveFormat, ConverterParameter=bmp, Converter={StaticResource SaveFormatToBooleanConverter}}"></con:ExtendedRadioButton>
+						</StackPanel>
+						<StackPanel Orientation="Horizontal" Margin="20,0,0,0">
+							<TextBlock Text="Images Cache: " Foreground="{DynamicResource Element.Foreground}" VerticalAlignment="Center"></TextBlock>
+								<Border BorderBrush="{DynamicResource Brush.Button.Border}" BorderThickness="2" Background="{DynamicResource Element.Foreground.Watermark}"
+							Margin="10,0,0,0">
+								<TextBlock Text="{Binding ImagesPath}" Foreground="{DynamicResource Element.Foreground}" MinWidth="450" MaxWidth="520"
+								TextAlignment="Left" TextWrapping="WrapWithOverflow" HorizontalAlignment="Center" VerticalAlignment="Center"></TextBlock>
+							</Border>
+							<con:ExtendedButton x:Name="extbt_ImgCache" Margin="10,0,0,0" Style="{StaticResource Style.Button.NoText}" Icon="{StaticResource appbar_folder_open}" 
+							Command="{Binding ChooseImagesPathCommand}"></con:ExtendedButton>
+						</StackPanel>
+							<TextBlock Foreground="{DynamicResource Element.Foreground.Gray112}" VerticalAlignment="Center" HorizontalAlignment="Center" Margin="0,10,0,0">
+							- <Run FontWeight="Bold" Text="{Binding ImagesInFolderCount}"></Run> <Run> images in selected folder with a total of </Run> 
+							<Run Text="{Binding ImagesFolderSizeMB, StringFormat={}{0:0.##}}" FontWeight="Bold"></Run><Run> MB </Run> -</TextBlock>
+							<TextBlock Foreground="{DynamicResource Element.Foreground.Gray112}" VerticalAlignment="Center" HorizontalAlignment="Center" Margin="0,0,0,10">
+							- <Run Text="{Binding DiskSpaceInfo}" FontWeight="Bold"></Run><Run> free of Disk Space </Run> -</TextBlock>
+					</StackPanel>
+				</Expander>
+
+				<Expander Grid.Row="1" Header="Color Theme" Style="{StaticResource ExpanderModernDefaultStyle}" IsExpanded="True" Margin="0,0,0,10">
+					<StackPanel Orientation="Horizontal" HorizontalAlignment="Left" Margin="20,0,0,0">
+						<con:ExtendedRadioButton Text="Light" Foreground="Black" Background="White" Icon="{StaticResource appbar_contrast_black}" ContentWidth="20" Padding="5,2,5,2" 
+						IsChecked="{Binding CurrentColorTheme, Converter={StaticResource StringToBooleanConverter}, ConverterParameter=DefaultColorTheme}"></con:ExtendedRadioButton>
+						<con:ExtendedRadioButton Text="Dark" Background="#FF202020" Foreground="White" Icon="{StaticResource appbar_contrast_white}" ContentWidth="20" Padding="5,2,5,2"
+						IsChecked="{Binding CurrentColorTheme, Converter={StaticResource StringToBooleanConverter}, ConverterParameter=DarkColorTheme}"></con:ExtendedRadioButton>
+					</StackPanel>
+				</Expander>
+				<Expander Grid.Row="2" Header="Other Details"  Style="{StaticResource ExpanderModernDefaultStyle}" IsExpanded="True">
+					<con:ExtendedCheckBox Margin="20,0,0,0" Text="Is Showing Grid inside Chosen Area" Info="(Only in Frame Mode)" IsChecked="{Binding IsShowingReferenceLines}"></con:ExtendedCheckBox>
+				</Expander>
+			</Grid>
+
+
+			<DockPanel LastChildFill="False" DockPanel.Dock="Bottom" Margin="10">
+				<con:ExtendedButton x:Name="bt_ApplyAll" DockPanel.Dock="Right" Style="{StaticResource Style.Button.Horizontal}" Margin="5,0,0,0" Text="Confirm" Click="bt_ApplyAll_Click" Icon="{StaticResource appbar_check}"></con:ExtendedButton>
+				<!--<con:ExtendedButton x:Name="bt_Cancel" DockPanel.Dock="Right" Style="{StaticResource Style.Button.Horizontal}" Text="Cancel" Click="bt_Cancel_Click" Icon="{StaticResource appbar_close}"></con:ExtendedButton>-->
 			</DockPanel>
 		</DockPanel>
 	</Grid>

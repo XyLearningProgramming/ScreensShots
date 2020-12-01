@@ -39,7 +39,7 @@ namespace ScreenShotApp
 
 		private void bt_ApplyAll_Click(object sender, RoutedEventArgs e)
 		{
-			App.Root.OptionsWindowViewModel.ConfirmOptionsCommand.Execute(null);
+			//App.Root.OptionsWindowViewModel.ConfirmOptionsCommand.Execute(null);
 			this.Close();
 		}
 

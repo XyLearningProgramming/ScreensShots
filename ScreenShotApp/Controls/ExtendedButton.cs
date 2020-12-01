@@ -32,6 +32,8 @@ namespace ScreenShotApp.Controls
 
 		public static readonly DependencyProperty TextProperty = DependencyProperty.Register(nameof(Text), typeof(string), typeof(ExtendedButton));
 
+        public static readonly DependencyProperty ImageProperty = DependencyProperty.Register("Image", typeof(Image), typeof(ExtendedButton));
+
         /// <summary>
         /// Height of icon
         /// </summary>
@@ -49,7 +51,6 @@ namespace ScreenShotApp.Controls
 
 		public static readonly DependencyProperty TextWrappingProperty = DependencyProperty.Register(nameof(TextWrapping), typeof(TextWrapping), typeof(ExtendedButton), new FrameworkPropertyMetadata(TextWrapping.NoWrap,
 			FrameworkPropertyMetadataOptions.AffectsMeasure | FrameworkPropertyMetadataOptions.AffectsRender));
-
 
         /// <summary>
         /// The icon of the button as a brush.
@@ -110,6 +111,8 @@ namespace ScreenShotApp.Controls
             get => (TextWrapping)GetValue(TextWrappingProperty);
             set => SetValue(TextWrappingProperty, value);
         }
+
+        public Image Image { get => (Image)GetValue(ImageProperty); set => SetValue(ImageProperty, value); }
         #endregion
     }
 }

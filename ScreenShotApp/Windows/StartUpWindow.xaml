@@ -7,7 +7,9 @@
         xmlns:con="clr-namespace:ScreenShotApp.Controls"
         mc:Ignorable="d"
         Title="ScreensShot - Startup Window"
-        SizeToContent="WidthAndHeight">
+        SizeToContent="WidthAndHeight"
+		Background="{DynamicResource Panel.Background}"
+		>
 	<local:WindowBase.Resources>
 		<Style x:Key="StartUpExtButtonDefaultStyle" BasedOn="{StaticResource Style.Button.Vertical.Border}" TargetType="{x:Type con:ExtendedButton}">
 			<Setter Property="Width" Value="200"></Setter>
@@ -21,8 +23,8 @@
         </Style>
     </local:WindowBase.Resources>
 	<StackPanel Orientation="Horizontal">
-		<con:ExtendedButton Text="Click-click" Icon="{StaticResource appbar_camera}" Style="{StaticResource StartUpExtButtonDefaultStyle}" Command="{Binding Root.OpenCaptureWindow}" KeyGesture="{Binding CaptureShortcutString, Mode=OneWay}"></con:ExtendedButton>
-		<con:ExtendedButton Icon="{StaticResource appbar_settings}" Text="Options"  Style="{StaticResource StartUpExtButtonDefaultStyle}" Command="{Binding Root.OpenOptionsWindow}"></con:ExtendedButton>
-		<con:ExtendedButton Icon="{StaticResource appbar_cabinet_files}" Text="Open File Explorer" Style="{StaticResource StartUpExtButtonDefaultStyle}" Command="{Binding Root.OpenFileExplorer}"></con:ExtendedButton>
+		<con:ExtendedButton Text="Click-click" Icon="{DynamicResource appbar_camera}" Style="{StaticResource StartUpExtButtonDefaultStyle}" Command="{Binding Root.OpenCaptureWindow}" KeyGesture="{Binding CaptureShortcutString, Mode=OneWay}"></con:ExtendedButton>
+		<con:ExtendedButton Icon="{DynamicResource appbar_settings}" Text="Options"  Style="{StaticResource StartUpExtButtonDefaultStyle}" Command="{Binding Root.OpenOptionsWindow}"></con:ExtendedButton>
+		<con:ExtendedButton Icon="{DynamicResource appbar_cabinet_files}" Text="Open File Explorer" Style="{StaticResource StartUpExtButtonDefaultStyle}" Command="{Binding Root.OpenFileExplorer}"></con:ExtendedButton>
 	</StackPanel>
 </local:WindowBase>

@@ -1,12 +1,14 @@
 ﻿using ScreenShotWindows.Utils.Interop;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
+using System.IO;
 using System.Text;
 using System.Windows;
-using System.Windows.Forms;
 using System.Windows.Input;
 using System.Windows.Interop;
 using System.Windows.Media;
+using System.Windows.Media.Imaging;
 using Cursor = System.Windows.Input.Cursor;
 using Cursors = System.Windows.Input.Cursors;
 
@@ -23,7 +25,70 @@ namespace ScreenShotWindows
 			Root = screensShotWindows;
 		}
 
-
+		#region stackedButtons
+		private DelegateCommand<TryChangeTargetAreaCommandParameter> _tryChangeTargetAreaSize;
+		public DelegateCommand<TryChangeTargetAreaCommandParameter> TryChangeTargetAreaSize { get =>
+			 _tryChangeTargetAreaSize ?? (_tryChangeTargetAreaSize = new DelegateCommand<TryChangeTargetAreaCommandParameter>(
+					(param) => {
+					// 1. rescale this back to original size if needed
+					// 2. clip 
+					// 3. change binding objects through clip command
+						InteropStructs.RECT rect = Root.TargetAreaRECT;
+						var rescaledWH = Root.GetPointBeforeScaling(new InteropStructs.POINT(param.intendedWidth, param.intendedHeight));
+						rect.Width = rescaledWH.X;
+						rect.Height = rescaledWH.Y;
+						MoveTargetAreaTo(rect);
+					},
+					(_) => { return Root.WindowStatus == ScreenShotWindowStatus.IsSelecting; }
+					));
+		}
+		private DelegateCommand<EmptyCommandParameter> _targetAreaYesClickedCommand;
+		public DelegateCommand<EmptyCommandParameter> TargetAreaYesClickedCommand {get => _targetAreaYesClickedCommand ?? (_targetAreaYesClickedCommand = new DelegateCommand<EmptyCommandParameter>(
+			(_) => { Root.SaveScreenShots = true; Root.Close(); }
+			)); }
+		private DelegateCommand<EmptyCommandParameter> _targetAreaNoClickedCommand;
+		public DelegateCommand<EmptyCommandParameter> TargetAreaNoClickedCommand
+		{
+			get => _targetAreaNoClickedCommand ?? (_targetAreaNoClickedCommand = new DelegateCommand<EmptyCommandParameter>(
+			(_) => { Root.SaveScreenShots = false; Root.Close(); }
+			));
+		}
+		private DelegateCommand<EmptyCommandParameter> _saveAsClickedCommand;
+		public DelegateCommand<EmptyCommandParameter> SaveAsClickedCommand {get => _saveAsClickedCommand ?? (_saveAsClickedCommand = new DelegateCommand<EmptyCommandParameter>(
+			(_) => 
+			{
+				var SaveFileDialog = new System.Windows.Forms.SaveFileDialog()
+				{
+					InitialDirectory = Root.UserSettings.ImageFolderPath,
+					Filter = GetFilterString(Root.UserSettings.SaveFormatPreferred),
+					FileName = System.IO.Path.GetRandomFileName(),
+					DefaultExt = "." + Root.UserSettings.SaveFormatPreferred,
+				};
+				if(SaveFileDialog.ShowDialog()== System.Windows.Forms.DialogResult.OK)
+				{
+					InteropStructs.RECT rect = Root.TargetAreaRECT;
+					rect = Root.GetRectAfterScaling(rect);
+					try
+					{
+						CroppedBitmap image = new CroppedBitmap(Root.SnappedImage, new Int32Rect(rect.Left, rect.Top, rect.Width, rect.Height));
+						var fileInfo = new FileInfo(SaveFileDialog.FileName);
+						image.SaveToLocal(AbsoluteDirectory: fileInfo.DirectoryName, imageName: Path.GetFileNameWithoutExtension(fileInfo.Name), extension: fileInfo.Extension);
+						Clipboard.SetImage(image);
+					}
+					catch(Exception e)
+					{
+						LogSystemShared.LogWriter.WriteLine(e.Message, "Crop error");
+						if(Root.SnappedImage != null)
+						{
+							var fileInfo = new FileInfo(SaveFileDialog.FileName);
+							Root.SnappedImage.SaveToLocal(AbsoluteDirectory: fileInfo.DirectoryName, imageName: Path.GetFileNameWithoutExtension(fileInfo.Name), extension: fileInfo.Extension);
+							Clipboard.SetImage(Root.SnappedImage);
+						}
+					}
+				}
+			}
+			)); }
+		#endregion
 
 		//private DelegateCommand<InteropStructs.POINT, object> _moveTargetArea;
 		//public DelegateCommand<InteropStructs.POINT, object> MoveTargetAreaCommand {get => _moveTargetArea ?? (_moveTargetArea =
@@ -95,6 +160,20 @@ namespace ScreenShotWindows
 				 }
 			)); }
 		#region private methods
+
+		#region stacked button control
+		private Dictionary<string, string> _formatToFilterDict = new Dictionary<string, string>() { ["png"] = "PNG (*.png)", ["jpeg"] = "JPEG (*jpeg)", ["bmp"] = "BMP (*.bmp)" };
+		private	string GetFilterString(string preferredFormat)
+		{
+			Debug.Assert(_formatToFilterDict.ContainsKey(preferredFormat));
+			List<string> filterList = new List<string>() { _formatToFilterDict[preferredFormat] };
+			foreach(var fl in _formatToFilterDict)
+			{
+				if(!filterList.Contains(fl.Value)) filterList.Add(fl.Value);
+			}
+			return string.Join('|', filterList);
+		}
+		#endregion
 		private void SnapTargetAreaExec(InteropStructs.POINT mousePT)
 		{
 			//// !!! This proves to always return our screenshot winow on top
@@ -166,10 +245,16 @@ namespace ScreenShotWindows
 			Root.TargetArea.Height = rect.Height;
 			Root.TargetArea.Margin = new Thickness(rect.Left, rect.Top, 0, 0);
 			Root.TargetAreaSize = Root.GetRectAfterScaling(rect).GetSize(); // update string size top left
-			
+
 			// move stackpanel below
 			//Root.StackedButtons.Margin = new Thickness(0, Root.TargetArea.Margin.Top + Root.TargetArea.Height + 5, Root.DesktopWindowRect.Width - Root.TargetArea.Margin.Left - Root.TargetArea.Width -5, 0);
+
 			MoveStackButtons(Root.TargetArea.Margin.Top, Root.Width- Root.TargetArea.Margin.Left- Root.TargetArea.Width, new InteropStructs.POINT(-5,5));
+			// change stackbuttons binding
+			var scaledPT = Root.GetPointAfterScaling(new InteropStructs.POINT(rect.Width, rect.Height));
+			Root.InputHeightValue = scaledPT.Y;
+			Root.InputWidthValue = scaledPT.X;
+
 			MoveMaskArea();
 		}
 		private void MoveMaskArea()
@@ -202,8 +287,24 @@ namespace ScreenShotWindows
 
 		private void MoveStackButtons(double Top, double Right, InteropStructs.POINT offset)
 		{
-			Root.StackedButtons.Margin = new Thickness(0, Top + offset.Y, Right + offset.X, 0);
+			if(Root.StackedButtons.Visibility != Visibility.Visible) return; // not visible not moving
 
+			bool isFlippingUp = Root.StackedButtons.Height + Top + offset.Y >= Root.Height ? true : false;
+			bool isFlippingRight = Root.StackedButtons.Width + Right + offset.X >= Root.Width? true: false;
+			if(!isFlippingRight && !isFlippingUp)
+				Root.StackedButtons.Margin = new Thickness(0, Top + offset.Y, Right + offset.X, 0);
+			else if(isFlippingRight && !isFlippingUp)
+			{
+				Root.StackedButtons.Margin = new Thickness(0, Top + offset.Y, Right - offset.X - Root.StackedButtons.Width, 0);
+			}
+			else if(!isFlippingRight && isFlippingUp)
+			{
+				Root.StackedButtons.Margin = new Thickness(0, Top - offset.Y - Root.StackedButtons.Height, Right + offset.X, 0);
+			}
+			else
+			{
+				Root.StackedButtons.Margin = new Thickness(0, Top - offset.Y - Root.StackedButtons.Height, Right - offset.X - Root.StackedButtons.Width, 0);
+			}
 		}
 
 		private void MoveMagnifier(MoveMagnifierCommandParameter param)
@@ -363,4 +464,8 @@ namespace ScreenShotWindows
 	}
 
 	internal class UpdateMouseCurosrCommandParameter : ICommandParameter { public InteropStructs.POINT MouseLocalPoint; public int SnapLength = 4; }
+
+	internal class TryChangeTargetAreaCommandParameter : ICommandParameter { public int intendedWidth; public int intendedHeight; }
+
+	internal class EmptyCommandParameter : ICommandParameter { }
 }

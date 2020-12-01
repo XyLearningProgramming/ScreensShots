@@ -12,5 +12,7 @@ namespace UserSettingsStruct
 		public bool IsShowingReferenceLine;
 		public double WhiteDipAnimDuration;
 		public string ImageFolderPath;
+		public bool IsShowingWhiteDip;
+		public string SaveFormatPreferred;
 	}
 }

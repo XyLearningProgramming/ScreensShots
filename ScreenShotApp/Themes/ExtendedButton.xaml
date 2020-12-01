@@ -225,4 +225,210 @@
 			</Trigger>
 		</Style.Triggers>
 	</Style>
+
+	<!--Button • No Border • Horizontal • Text-->
+	<Style TargetType="{x:Type n:ExtendedButton}" BasedOn="{StaticResource {x:Type Button}}" x:Key="Style.Button.Horizontal">
+		<Setter Property="Foreground" Value="{DynamicResource Element.Foreground}"/>
+		<Setter Property="Background" Value="Transparent"/>
+		<Setter Property="TextWrapping" Value="WrapWithOverflow"/>
+		<Setter Property="HorizontalContentAlignment" Value="Center"/>
+		<Setter Property="SnapsToDevicePixels" Value="True"/>
+		<Setter Property="FocusVisualStyle" Value="{x:Null}"/>
+
+		<Setter Property="Template">
+			<Setter.Value>
+				<ControlTemplate TargetType="{x:Type n:ExtendedButton}">
+					<Border x:Name="MainBorder" MinHeight="{TemplateBinding MinHeight}" Background="{TemplateBinding Background}" BorderThickness="0">
+						<Grid x:Name="InnerGrid" Margin="{TemplateBinding Padding}">
+							<Grid.RowDefinitions>
+								<RowDefinition/>
+								<RowDefinition Height="Auto"/>
+							</Grid.RowDefinitions>
+							<Grid.ColumnDefinitions>
+								<ColumnDefinition Width="Auto"/>
+								<ColumnDefinition/>
+							</Grid.ColumnDefinitions>
+
+							<Border Grid.Row="0" Grid.Column="0" Grid.RowSpan="2" Background="{TemplateBinding Icon}" Margin="2" Opacity="{DynamicResource Element.Opacity}"
+                                    Height="{TemplateBinding ContentHeight}" Width="{TemplateBinding ContentWidth}" VerticalAlignment="Center" HorizontalAlignment="Center"/>
+
+							<TextBlock Grid.Row="0" Grid.Column="1" x:Name="TextBlockInternal" MaxWidth="{Binding Path=ActualWidth, RelativeSource={RelativeSource TemplatedParent}}" 
+                                       HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}" Margin="2,0" Foreground="{TemplateBinding Foreground}"
+                                       VerticalAlignment="{TemplateBinding VerticalContentAlignment}" Text="{TemplateBinding Text}" 
+                                       TextWrapping="{TemplateBinding TextWrapping}" Effect="{TemplateBinding Effect}"/>
+
+							<TextBlock Grid.Row="1" Grid.Column="1" x:Name="KeyGestureTextBlock" Text="{TemplateBinding KeyGesture}" Margin="0,-10,2,0" Padding="0" Height="13"
+                                       Foreground="{DynamicResource Element.Foreground.Gray112}" FontSize="10" HorizontalAlignment="Right"/>
+						</Grid>
+					</Border>
+
+					<ControlTemplate.Triggers>
+						<Trigger Property="KeyGesture" Value="{x:Static s:String.Empty}">
+							<Setter TargetName="KeyGestureTextBlock" Property="Visibility" Value="Collapsed"/>
+						</Trigger>
+						<Trigger Property="IsKeyboardFocused" Value="True">
+							<Setter TargetName="InnerGrid" Property="Background" Value="{DynamicResource Brush.Button.Background.Focused}"/>
+						</Trigger>
+					</ControlTemplate.Triggers>
+				</ControlTemplate>
+			</Setter.Value>
+		</Setter>
+
+		<Style.Triggers>
+			<Trigger Property="IsMouseOver" Value="True">
+				<Setter Property="Background" Value="{DynamicResource Brush.Button.Background.Hover}"/>
+			</Trigger>
+			<Trigger Property="IsPressed" Value="True">
+				<Setter Property="Background" Value="{DynamicResource Brush.Button.Background.Pressed}"/>
+			</Trigger>
+			<Trigger Property="IsEnabled" Value="False">
+				<Setter Property="Opacity" Value="0.7"/>
+			</Trigger>
+		</Style.Triggers>
+	</Style>
+
+	<!--Button • No Border • No Text-->
+	<Style TargetType="{x:Type n:ExtendedButton}" BasedOn="{StaticResource {x:Type Button}}" x:Key="Style.Button.NoText">
+		<Setter Property="Background" Value="Transparent"/>
+		<Setter Property="SnapsToDevicePixels" Value="True"/>
+		<Setter Property="FocusVisualStyle" Value="{x:Null}"/>
+
+		<Setter Property="Template">
+			<Setter.Value>
+				<ControlTemplate TargetType="{x:Type n:ExtendedButton}">
+					<Border x:Name="MainBorder" MinHeight="{TemplateBinding MinHeight}" Background="{TemplateBinding Background}">
+						<Grid x:Name="InnerGrid">
+							<Border Background="{TemplateBinding Icon}" Margin="{TemplateBinding Padding}" Opacity="{DynamicResource Element.Opacity}"
+                                    Height="{TemplateBinding ContentHeight}" Width="{TemplateBinding ContentWidth}" VerticalAlignment="Center" HorizontalAlignment="Center"/>
+						</Grid>
+					</Border>
+
+					<ControlTemplate.Triggers>
+						<Trigger Property="IsKeyboardFocused" Value="True">
+							<Setter TargetName="InnerGrid" Property="Background" Value="{DynamicResource Brush.Button.Background.Focused}"/>
+						</Trigger>
+					</ControlTemplate.Triggers>
+				</ControlTemplate>
+			</Setter.Value>
+		</Setter>
+
+		<Style.Triggers>
+			<Trigger Property="IsMouseOver" Value="True">
+				<Setter Property="Background" Value="{DynamicResource Brush.Button.Background.Hover}"/>
+			</Trigger>
+			<Trigger Property="IsPressed" Value="True">
+				<Setter Property="Background" Value="{DynamicResource Brush.Button.Background.Pressed}"/>
+			</Trigger>
+			<Trigger Property="IsEnabled" Value="False">
+				<Setter Property="Opacity" Value="0.7"/>
+			</Trigger>
+		</Style.Triggers>
+	</Style>
+
+	<!--Button • Border • No Icon -->
+	<Style TargetType="{x:Type n:ExtendedButton}" BasedOn="{StaticResource {x:Type Button}}" x:Key="Style.Button.NoIcon">
+		<Setter Property="Foreground" Value="{DynamicResource Element.Foreground}"/>
+		<Setter Property="Background" Value="{DynamicResource Brush.Button.Background}"/>
+		<Setter Property="BorderBrush" Value="{DynamicResource Brush.Button.Border}"/>
+		<Setter Property="TextWrapping" Value="WrapWithOverflow"/>
+		<Setter Property="BorderThickness" Value="1"/>
+		<Setter Property="SnapsToDevicePixels" Value="True"/>
+		<Setter Property="HorizontalContentAlignment" Value="Center"/>
+		<Setter Property="VerticalContentAlignment" Value="Center"/>
+		<Setter Property="FocusVisualStyle" Value="{x:Null}"/>
+
+		<Setter Property="Template">
+			<Setter.Value>
+				<ControlTemplate TargetType="{x:Type n:ExtendedButton}">
+					<Border x:Name="MainBorder" BorderBrush="{TemplateBinding BorderBrush}" Height="{TemplateBinding Height}" Width="{TemplateBinding Width}" BorderThickness="{TemplateBinding BorderThickness}" MinHeight="{TemplateBinding MinHeight}" Background="{TemplateBinding Background}">
+						<Border x:Name="InnerBorder" Background="Transparent">
+							<TextBlock x:Name="TextBlockInternal" MaxWidth="{Binding Path=ActualWidth, RelativeSource={RelativeSource TemplatedParent}}" 
+							Height="{TemplateBinding ContentHeight}" Width="{TemplateBinding ContentWidth}"
+                                           HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}" Margin="{TemplateBinding Padding}" 
+                                           VerticalAlignment="{TemplateBinding VerticalContentAlignment}" Text="{TemplateBinding Text}" 
+                                           TextWrapping="{TemplateBinding TextWrapping}" Effect="{TemplateBinding Effect}" Padding="2"/>
+						</Border>
+					</Border>
+					<ControlTemplate.Triggers>
+						<Trigger Property="IsKeyboardFocused" Value="True">
+							<Setter TargetName="MainBorder" Property="Margin" Value="-1"/>
+							<Setter TargetName="InnerBorder" Property="Background" Value="{DynamicResource Brush.Button.Background.Focused}"/>
+						</Trigger>
+					</ControlTemplate.Triggers>
+				</ControlTemplate>
+			</Setter.Value>
+		</Setter>
+
+		<Style.Triggers>
+			<Trigger Property="IsMouseOver" Value="True">
+				<Setter Property="Background" Value="{DynamicResource Brush.Button.Background.Hover}"/>
+				<Setter Property="BorderBrush" Value="{DynamicResource Brush.Button.Border.Hover}"/>
+			</Trigger>
+			<Trigger Property="IsPressed" Value="True">
+				<Setter Property="Background" Value="{DynamicResource Brush.Button.Background.Pressed}"/>
+				<Setter Property="BorderBrush" Value="{DynamicResource Brush.Button.Border.Pressed}"/>
+			</Trigger>
+			<Trigger Property="IsKeyboardFocused" Value="True">
+				<Setter Property="FocusVisualStyle" Value="{x:Null}"/>
+				<Setter Property="BorderThickness" Value="1.5"/>
+				<Setter Property="BorderBrush" Value="{DynamicResource Brush.Button.Border.Focused}"/>
+			</Trigger>
+			<Trigger Property="IsEnabled" Value="False">
+				<Setter Property="Opacity" Value="0.7"/>
+			</Trigger>
+		</Style.Triggers>
+	</Style>
+
+	<!--Button • Border • Vertical Image • Text-->
+	<Style TargetType="{x:Type n:ExtendedButton}" BasedOn="{StaticResource {x:Type Button}}" x:Key="Style.Button.Image">
+		<Setter Property="Foreground" Value="{DynamicResource Element.Foreground}"/>
+		<Setter Property="Background" Value="{DynamicResource Brush.Button.Background}"/>
+		<Setter Property="BorderBrush" Value="{DynamicResource Brush.Button.Border}"/>
+		<Setter Property="BorderThickness" Value="1"/>
+		<Setter Property="SnapsToDevicePixels" Value="True"/>
+		<Setter Property="Padding" Value="3,1"/>
+		<Setter Property="HorizontalContentAlignment" Value="Center"/>
+		<Setter Property="VerticalContentAlignment" Value="Center"/>
+		<Setter Property="FocusVisualStyle" Value="{x:Null}"/>
+
+		<Setter Property="Template">
+			<Setter.Value>
+				<ControlTemplate TargetType="{x:Type n:ExtendedButton}">
+					<Border x:Name="MainBorder" BorderBrush="{TemplateBinding BorderBrush}" Height="{TemplateBinding Height}" Width="{TemplateBinding Width}"  BorderThickness="{TemplateBinding BorderThickness}" MinHeight="{TemplateBinding MinHeight}" MinWidth="{TemplateBinding MinWidth}" MaxWidth="{TemplateBinding MaxWidth}" MaxHeight="{TemplateBinding MaxHeight}" Background="{TemplateBinding Background}">
+						<Border x:Name="InnerBorder" Background="Transparent">
+							<ContentPresenter Grid.Row="1"  x:Name="TextBlockInternal" MinWidth="{TemplateBinding ContentWidth}" MinHeight="{TemplateBinding ContentHeight}"
+							HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}" Margin="{TemplateBinding Padding}"
+							VerticalAlignment="{TemplateBinding VerticalContentAlignment}" Effect="{TemplateBinding Effect}"/>
+						</Border>
+					</Border>
+
+					<ControlTemplate.Triggers>
+						<Trigger Property="IsKeyboardFocused" Value="True">
+							<Setter TargetName="MainBorder" Property="Margin" Value="-1"/>
+							<Setter TargetName="InnerBorder" Property="Background" Value="{DynamicResource Brush.Button.Background.Focused}"/>
+						</Trigger>
+					</ControlTemplate.Triggers>
+				</ControlTemplate>
+			</Setter.Value>
+		</Setter>
+
+		<Style.Triggers>
+			<Trigger Property="IsMouseOver" Value="True">
+				<Setter Property="Background" Value="{DynamicResource Brush.Button.Background.Hover}"/>
+				<Setter Property="BorderBrush" Value="{DynamicResource Brush.Button.Border.Hover}"/>
+			</Trigger>
+			<Trigger Property="IsPressed" Value="True">
+				<Setter Property="Background" Value="{DynamicResource Brush.Button.Background.Pressed}"/>
+				<Setter Property="BorderBrush" Value="{DynamicResource Brush.Button.Border.Pressed}"/>
+			</Trigger>
+			<Trigger Property="IsKeyboardFocused" Value="True">
+				<Setter Property="BorderThickness" Value="1.5"/>
+				<Setter Property="BorderBrush" Value="{DynamicResource Brush.Button.Border.Focused}"/>
+			</Trigger>
+			<Trigger Property="IsEnabled" Value="False">
+				<Setter Property="Opacity" Value="0.7"/>
+			</Trigger>
+		</Style.Triggers>
+	</Style>
+
 </ResourceDictionary>

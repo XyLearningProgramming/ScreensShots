@@ -29,7 +29,7 @@ namespace ScreenShotWindows
 	{
 		private List<ScreensShotWindows> _allWindows = new List<ScreensShotWindows>();
 		private int windowsCreatedCount = 0;
-		public void Start(WindowsCaptureScreenTarget screenTarget, WindowsCaptureMode captureMode, UserSettingsForScreenShotWindows userSettings)
+		public void Start(WindowsCaptureScreenTarget screenTarget, WindowsCaptureMode captureMode, UserSettingsForScreenShotWindows userSettings, bool isSavingToLocal = true)
 		{
 			LogSystemShared.LogWriter.WriteLine(Enum.GetName(typeof(WindowsCaptureScreenTarget), screenTarget), "Capture Target");
 			LogSystemShared.LogWriter.WriteLine(Enum.GetName(typeof(WindowsCaptureMode), captureMode), "Capture Mode");
@@ -67,7 +67,7 @@ namespace ScreenShotWindows
 				{
 					windowsCreatedCount++;
 					var mainScreen = System.Windows.Forms.Screen.PrimaryScreen;
-					new WhiteDipWindow(mainScreen, this, userSettings).Show();
+					new WhiteDipWindow(mainScreen, this, userSettings, isSavingToLocal).Show();
 				}
 				else if(screenTarget == WindowsCaptureScreenTarget.ActiveScreen)
 				{
@@ -75,14 +75,14 @@ namespace ScreenShotWindows
 					InteropMethods.GetCursorPos_(out InteropStructs.POINT pt);
 					var screen = System.Windows.Forms.Screen.FromPoint(new System.Drawing.Point(pt.X, pt.Y));
 
-					new WhiteDipWindow(screen, this, userSettings).Show();
+					new WhiteDipWindow(screen, this, userSettings, isSavingToLocal).Show();
 				}
 				else if(screenTarget == WindowsCaptureScreenTarget.AllScreens)
 				{
 					foreach(var screen in System.Windows.Forms.Screen.AllScreens)
 					{
 						windowsCreatedCount++;
-						new WhiteDipWindow(screen, this,userSettings).Show();
+						new WhiteDipWindow(screen, this,userSettings, isSavingToLocal).Show();
 					}
 				}
 			}

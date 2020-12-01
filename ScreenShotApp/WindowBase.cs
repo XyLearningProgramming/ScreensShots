@@ -1,4 +1,5 @@
-﻿using System;
+﻿using ScreenShotApp.Utils;
+using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Windows;
@@ -7,30 +8,25 @@ namespace ScreenShotApp
 {
 	public interface IMyWindows
 	{
-		void Normalize();
-		void Minimize();
+		void TryRestoreWindowState();
+		void MinimizeWindowState();
 	}
 	public class WindowBase : Window, IMyWindows
 	{
-		//private Size _idealSize = new Size();
+		private WindowState _lastWindowState = WindowState.Normal;
 
-		public void Minimize()
+		public void MinimizeWindowState()
 		{
-			//this.Opacity = 0;
-			//_idealSize = this.RenderSize;
-			//this.RenderSize = new Size(0, 0);
-			//this.Visibility = Visibility.Collapsed;
+			_lastWindowState = this.WindowState;
 			this.WindowState = WindowState.Minimized;
 		}
 
-		public void Normalize()
+		public void TryRestoreWindowState()
 		{
-			//this.Opacity = 1;
-			//this.Visibility = Visibility.Visible;
-			this.WindowState = WindowState.Normal;
-			//this.RenderSize = _idealSize;
+			// not restoring to full scale when it's continuous mode
+			if(UserSettingsManager.Instance.UserCaptureMode != ScreenShotWindows.WindowsCaptureMode.Continuous)
+				this.WindowState = _lastWindowState;
 		}
-
 
 	}
 
