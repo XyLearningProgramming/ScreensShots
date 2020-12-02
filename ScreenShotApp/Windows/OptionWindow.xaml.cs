@@ -1,6 +1,7 @@
 ﻿using ScreenShotApp.Controls;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Text;
 using System.Windows;
 using System.Windows.Controls;
@@ -46,6 +47,18 @@ namespace ScreenShotApp
 		private void bt_Cancel_Click(object sender, RoutedEventArgs e)
 		{
 			this.Close();
+		}
+
+		private void Hyperlink_RequestNavigate(object sender, System.Windows.Navigation.RequestNavigateEventArgs e)
+		{
+			Process.Start(new ProcessStartInfo(e.Uri.AbsoluteUri) { UseShellExecute=true });
+			e.Handled = true;
+		}
+
+		private void extb_Github_Click(object sender, RoutedEventArgs e)
+		{
+			Process.Start(new ProcessStartInfo(@"https://github.com/XyLearningProgramming/ScreensShots") { UseShellExecute = true });
+			e.Handled = true;
 		}
 	}
 }

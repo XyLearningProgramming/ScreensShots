@@ -14,6 +14,8 @@
 		</ResourceDictionary>
 		<ResourceDictionary Source="pack://application:,,,/ScreenShotApp;component/Themes/ExtendedCheckBox.xaml">
 		</ResourceDictionary>
+		<ResourceDictionary Source="pack://application:,,,/ScreenShotApp;component/Themes/IntegerBox.xaml">
+		</ResourceDictionary>
 		<ResourceDictionary>
 			<Style x:Key="Style.FocusVisual.NoMargin">
 				<Setter Property="Control.Template">

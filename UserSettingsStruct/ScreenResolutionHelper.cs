@@ -40,7 +40,7 @@ namespace UserSettingsStruct
 			{
 				var former = _inferredScreenResolution[screen];
 				_inferredScreenResolution[screen] = (width, height);
-				_inferredScales[screen] = former.width / (width * 1.0);
+				_inferredScales[screen] = (width * 1.0)/ screen.Bounds.Width;
 				return;
 			}
 			throw new Exception($"Screen with name {screen.DeviceName} has no presettings. Cannot force set it.");
@@ -76,9 +76,9 @@ namespace UserSettingsStruct
 			double scaleFactor = GetScaleFactorFromScreen(screen);
 			double adjustedWidth = screen.Bounds.Width * scaleFactor;
 			double adjustedHeight = screen.Bounds.Height * scaleFactor;
-			LogSystemShared.LogWriter.WriteLine($"screen {screen.DeviceName} original width {screen.Bounds.Width} height {screen.Bounds.Height}");
-			LogSystemShared.LogWriter.WriteLine($"screen {screen.DeviceName} adjusted width {adjustedWidth:0.00} height {adjustedHeight:0.00}");
-			LogSystemShared.LogWriter.WriteLine($"screen {screen.DeviceName} scale factor {scaleFactor:0.00}");
+			//LogSystemShared.LogWriter.WriteLine($"screen {screen.DeviceName} original width {screen.Bounds.Width} height {screen.Bounds.Height}");
+			//LogSystemShared.LogWriter.WriteLine($"screen {screen.DeviceName} adjusted width {adjustedWidth:0.00} height {adjustedHeight:0.00}");
+			//LogSystemShared.LogWriter.WriteLine($"screen {screen.DeviceName} scale factor {scaleFactor:0.00}");
 			return FrequentResolution.AllResolution.SelectMany(pr=>pr.Value).OrderBy(tp => (Math.Abs(adjustedWidth - tp.width) + Math.Abs(adjustedHeight - tp.height))).First(); //manhattan distacne because it's simpler
 		}
 

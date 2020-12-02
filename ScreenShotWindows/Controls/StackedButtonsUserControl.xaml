@@ -7,7 +7,6 @@
         mc:Ignorable="d"
 		Background="#FF323232"
 		xmlns:ctrl="clr-namespace:ScreenShotWindows.Controls"
-		DataContext="{Binding RelativeSource={RelativeSource self}}"
 		Visibility="{Binding StackedButtonsVisibility, Mode=OneWay}"
 		HorizontalAlignment="Right"
 		VerticalAlignment="Top"
@@ -129,7 +128,7 @@
 			</Style>
 		</ResourceDictionary>
 	</UserControl.Resources>
-	<Grid>
+	<Grid DataContext="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type UserControl}}}">
 		<StackPanel Orientation="Horizontal" Background="#FF323232" SnapsToDevicePixels="True" HorizontalAlignment="Right" VerticalAlignment="Center" Margin="2">
 			<ctrl:PixIntegerBox x:Name="pib_Width" Minimum="{Binding MinIntegerBoxInput, Mode=OneTime}" Maximum="{Binding MaxIntegerBoxInput, Mode=OneTime}" 
 			ToolTip="Width" ToolTipService.Placement="Bottom"
@@ -144,14 +143,14 @@
 					VerticalAlignment="Center" HorizontalAlignment="Center"></Border>
 			</ToggleButton>
 			<Separator />
-			<Button BorderThickness="0" Command="{Binding SaveAsClickedCommand}">
+			<Button BorderThickness="0" Command="{Binding ScreenShotWindowsCommands.SaveAsClickedCommand}">
 				<Border Background="{StaticResource appbar_save}" Width="12" Height="12" Margin="5"></Border>
 			</Button>
 			<Separator />
-			<Button BorderThickness="0" Command="{Binding TargetAreaNoClickedCommand}">
+			<Button BorderThickness="0" Command="{Binding ScreenShotWindowsCommands.TargetAreaNoClickedCommand}">
 				<Border Background="{StaticResource appbar_close}" Width="12" Height="12" Margin="5"></Border>
 			</Button>
-			<Button BorderThickness="0" Command="{Binding TargetAreaYesClickedCommand}">
+			<Button BorderThickness="0" Command="{Binding ScreenShotWindowsCommands.TargetAreaYesClickedCommand}">
 				<Border Background="{StaticResource appbar_check}" Width="12" Height="12" Margin="5"></Border>
 			</Button>
 		</StackPanel>

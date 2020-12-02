@@ -32,9 +32,23 @@ namespace ScreenShotApp.ViewModels
 		//public BitmapSource SnapShotSource { get; set; }
 		//public WidthHeightInfoModel WidthHeightInfo { get; set; }
 		private ScreenInfoModel _screenInfoModel = new ScreenInfoModel();
-		public ScreenInfoModel ScreenInfoModel { get=>_screenInfoModel; set=>this.MutateVerbose(ref _screenInfoModel,value, e => PropertyChanged?.Invoke(this, e)); }
-		public int PreviousScreenIndex { get => ScreenInfoModel.ScreenIndex - 1; }
-		public int NextScreenIndex { get => ScreenInfoModel.ScreenIndex + 1; }
+		public ScreenInfoModel ScreenInfoModel { get=>_screenInfoModel;
+			set
+			{ 
+				if(this.MutateVerbose(ref _screenInfoModel, value, e => PropertyChanged?.Invoke(this, e)))
+				{
+					PreviousScreenIndex = value.ScreenIndex - 1;
+					NextScreenIndex = value.ScreenIndex + 1;
+					OptionsWindowViewModel.ChooseScreenResolutionCommand.RaiseCanExecuteChanged();
+				}
+			} 
+		}
+
+		private int _previousScreenIndex = 0;
+		public int PreviousScreenIndex { get => _previousScreenIndex; set=> this.MutateVerbose(ref _previousScreenIndex, value, e => PropertyChanged?.Invoke(this, e)); }
+		private int _nextScreenIndex = 0;
+		public int NextScreenIndex { get => _nextScreenIndex; set=> this.MutateVerbose(ref _nextScreenIndex, value, e => PropertyChanged?.Invoke(this, e)); }
+
 		public OptionsWindowViewModel OptionsWindowViewModel { get; private set; }
 		private (int width, int height) _resolution;
 		public (int width, int height) Resolution {get => _resolution;

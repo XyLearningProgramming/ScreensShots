@@ -29,8 +29,7 @@ namespace ScreenShotApp.ViewModels
 		{
 			this.Root = rootViewModel;
 			ResolutionSelectorViewModel = new ResolutionSelectorViewModel(this);
-			UpdateImageFolderInfo();
-			UpdateScreenResolutionPanel();
+
 		}
 
 		// used ONLY in design time
@@ -39,7 +38,8 @@ namespace ScreenShotApp.ViewModels
 		#region public functions
 		public void OnWindowLoaded(object sender, RoutedEventArgs args)
 		{
-
+			UpdateImageFolderInfo();
+			UpdateScreenResolutionPanel();
 		}
 		public void OnWindowClosed(object sender, EventArgs args)
 		{
@@ -132,6 +132,9 @@ namespace ScreenShotApp.ViewModels
 			if(sender is ScreenShot screenShot_ && screenShot_ == tmpScreenShot)
 			{
 				ScreensInfo.Add(new ScreenInfoModel() { SampleShot = args.image, Resolution = ScreenResolutionInferrer.GetInferredResolution(args.screen), ScaleFactor = ScreenResolutionInferrer.GetInferredScale(args.screen), DeviceName= args.screen.DeviceName });
+
+				LogSystemShared.LogWriter.WriteLine($"screensinfo in viewmodel added {args.screen.DeviceName}");
+
 				// update selector viewmodel if possible
 				if(_selectorTargetDeviceName!=null && !string.IsNullOrEmpty(_selectorTargetDeviceName) && args.screen.DeviceName==_selectorTargetDeviceName)
 				{
@@ -212,6 +215,16 @@ namespace ScreenShotApp.ViewModels
 				if(this.MutateVerbose(ref _isShowingReferenceLines, value, e => PropertyChanged?.Invoke(this, e)))
 				{
 					UserSettingsManager.Instance.IsShowingReferenceLine = value;
+				}
+			}
+		}
+		private double _whiteDipDuration = UserSettingsManager.Instance.WhiteDipAnimDuration;
+		public double WhiteDipDuration { get => _whiteDipDuration;
+			set 
+			{
+				if(this.MutateVerbose(ref _whiteDipDuration, value, e => PropertyChanged?.Invoke(this, e)))
+				{
+					UserSettingsManager.Instance.WhiteDipAnimDuration = value;
 				}
 			}
 		}

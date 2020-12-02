@@ -30,6 +30,7 @@
 					<util:StringToBooleanConverter x:Key="StringToBooleanConverter"></util:StringToBooleanConverter>
 					<util:MultiResBindingsToBooleanConverter x:Key="MultiResBindingsToBooleanConverter"></util:MultiResBindingsToBooleanConverter>
 					<util:SaveFormatToBooleanConverter x:Key="SaveFormatToBooleanConverter"></util:SaveFormatToBooleanConverter>
+					<util:DoubleToStringConverter x:Key="DoubleToStringConverter"></util:DoubleToStringConverter>
 				</ResourceDictionary>
 			</ResourceDictionary.MergedDictionaries>
 		</ResourceDictionary>

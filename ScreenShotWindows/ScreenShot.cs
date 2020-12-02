@@ -51,13 +51,17 @@ namespace ScreenShotWindows
 				}
 				else if(screenTarget == WindowsCaptureScreenTarget.AllScreens)
 				{
+					_allWindows.Clear();
 					TargetAreaSelected += OneWindowTargetAreaSelected;
 					foreach(var screen in System.Windows.Forms.Screen.AllScreens)
 					{
 						windowsCreatedCount++;
 						var ssw = new ScreensShotWindows(screen, this, userSettings);
 						_allWindows.Add(ssw);
-						ssw.Show();
+					}
+					foreach(var tmp in _allWindows)
+					{
+						tmp.Show();
 					}
 				}
 			}
@@ -79,10 +83,15 @@ namespace ScreenShotWindows
 				}
 				else if(screenTarget == WindowsCaptureScreenTarget.AllScreens)
 				{
+					List<WhiteDipWindow> tmp = new List<WhiteDipWindow>();
 					foreach(var screen in System.Windows.Forms.Screen.AllScreens)
 					{
 						windowsCreatedCount++;
-						new WhiteDipWindow(screen, this,userSettings, isSavingToLocal).Show();
+						tmp.Add(new WhiteDipWindow(screen, this, userSettings, isSavingToLocal));
+					}
+					foreach(var win in tmp)
+					{
+						win.Show();
 					}
 				}
 			}
@@ -119,6 +128,7 @@ namespace ScreenShotWindows
 				}
 			}
 			_allWindows.Clear();
+			TargetAreaSelected -= OneWindowTargetAreaSelected;
 		}
 		#endregion
 

@@ -6,11 +6,27 @@
         xmlns:local="clr-namespace:ScreenShotApp"
         xmlns:con="clr-namespace:ScreenShotApp.Controls"
 		xmlns:vm="clr-namespace:ScreenShotApp.ViewModels"
+		xmlns:util="clr-namespace:ScreenShotApp.Utils"
         mc:Ignorable="d"
         Title="OPTIONS" Height="450" Width="800"
         d:DataContext="{d:DesignInstance vm:OptionsWindowViewModel, IsDesignTimeCreatable=True}" 
 		Background="{DynamicResource Panel.Background}"
         >
+	<local:WindowBase.Resources>
+		<!--Set style for validation-->
+		<Style x:Key="ExtendedTextBox_ValidationError" TargetType="{x:Type con:ExtendedTextBox}">
+			<Style.Triggers>
+				<Trigger Property="Validation.HasError" Value="True">
+					<Setter Property="BorderBrush" Value="Red"></Setter>
+					<Setter Property="BorderThickness" Value="3"></Setter>
+					<Setter Property="Background" Value="DarkRed"></Setter>
+					<Setter Property="ToolTip"
+						Value="{Binding RelativeSource={x:Static RelativeSource.Self},
+										Path=(Validation.Errors)/ErrorContent}"/>
+				</Trigger>
+			</Style.Triggers>
+		</Style>
+	</local:WindowBase.Resources>
 	<Grid>
 		<Grid.ColumnDefinitions>
 			<ColumnDefinition Width="Auto"></ColumnDefinition>
@@ -26,15 +42,16 @@
 						<Setter Property="ContentWidth" Value="24"/>
 						<Setter Property="TextWrapping" Value="WrapWithOverflow"/>
 						<Setter Property="HorizontalContentAlignment" Value="Left"/>
+						<Setter Property="Margin" Value="0,5,0,5"></Setter>
 					</Style>
 				</StackPanel.Resources>
 				<!--Capture mode + related shortcuts-->
-			<con:ExtendedRadioButton x:Name="extrb_CaptureMode" Text="Modes" Icon="{StaticResource appbar_camera_auto}"></con:ExtendedRadioButton>
+			<con:ExtendedRadioButton x:Name="extrb_CaptureMode" Text="Modes" Icon="{StaticResource appbar_camera_auto}" IsChecked="True"></con:ExtendedRadioButton>
 				<!--Manually change screen res inferred-->
 			<con:ExtendedRadioButton x:Name="extrb_ScreenRes" Text="Screens" Icon="{StaticResource appbar_monitor_identify}"></con:ExtendedRadioButton>
 				<!--Color theme choose, other colors-->
-			<con:ExtendedRadioButton x:Name="extrb_Others" Text="Others" Icon="{StaticResource appbar_booklist}"  IsChecked="True"></con:ExtendedRadioButton>
-			<con:ExtendedRadioButton x:Name="extrb_About" Text="About" Icon="{StaticResource appbar_information_circle}"></con:ExtendedRadioButton>
+			<con:ExtendedRadioButton x:Name="extrb_Others" Text="Others" Icon="{StaticResource appbar_booklist}"></con:ExtendedRadioButton>
+			<con:ExtendedRadioButton x:Name="extrb_About" Text="About" Icon="{StaticResource appbar_information_circle}" ></con:ExtendedRadioButton>
 			</StackPanel>
 
 			<DockPanel x:Name="dp_RightPanel" Grid.Column="1" LastChildFill="False">
@@ -108,28 +125,33 @@
 			<!--Screens Panel-->
 			<Grid DockPanel.Dock="Top" x:Name="gr_ScreensDisplay" Visibility="{Binding ElementName=extrb_ScreenRes, Path=IsChecked, Mode=OneWay, Converter={StaticResource BooleanToVisibilityConverter}}">
 				<Expander Header="Screen Resolution" IsExpanded="True" Style="{StaticResource ExpanderModernDefaultStyle}">
-				<!--ScreensInfo display template-->
-					<ItemsControl ItemsSource="{Binding ScreensInfo}" Margin="20,0,0,0">
-						<ItemsControl.ItemTemplate>
-							<DataTemplate DataType="{x:Type vm:ScreenInfoModel}">
-								<con:ExtendedButton Margin="15,5,15,5" Style="{StaticResource Style.Button.Image}" MaxWidth="340" ContentWidth="300"
-								CommandParameter="{Binding ScreenIndex}"
-								Command="{Binding Path=DataContext.ChooseScreenResolutionCommand, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type ItemsControl}}}">
-									<StackPanel>
-										<Image Source="{Binding SampleShot}" Stretch="Uniform" SnapsToDevicePixels="True" RenderOptions.BitmapScalingMode="NearestNeighbor"></Image>
-										<TextBlock HorizontalAlignment="Center" VerticalAlignment="Center" Text="{Binding DeviceName}"></TextBlock>
-										<TextBlock HorizontalAlignment="Center" VerticalAlignment="Center"><Run FontWeight="SemiBold" Text="{Binding ResolutionString, Mode=OneWay}"/></TextBlock>
-										<!--</Run> Scale: <Run FontWeight="SemiBold" Text="{Binding ScaleFactor, StringFormat={}{0}%}"></Run>-->
-									</StackPanel>
-								</con:ExtendedButton>
-							</DataTemplate>
-						</ItemsControl.ItemTemplate>
-						<ItemsControl.ItemsPanel>
-							<ItemsPanelTemplate>
-								<WrapPanel></WrapPanel>
-							</ItemsPanelTemplate>
-						</ItemsControl.ItemsPanel>
-					</ItemsControl>
+					<StackPanel Orientation="Vertical" Margin="20,5,0,0">
+						<Label Margin="0,0,0,0">Previews of Snapshots of All Your Monitor(s)</Label>
+						<!--ScreensInfo display template-->
+						<ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
+						<ItemsControl ItemsSource="{Binding ScreensInfo}" Margin="10,20,0,0">
+							<ItemsControl.ItemTemplate>
+								<DataTemplate DataType="{x:Type vm:ScreenInfoModel}">
+									<con:ExtendedButton Margin="15,5,15,5" Style="{StaticResource Style.Button.Image}" MaxWidth="290" ContentWidth="250"
+									CommandParameter="{Binding ScreenIndex}"
+									Command="{Binding Path=DataContext.ChooseScreenResolutionCommand, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type ItemsControl}}}">
+										<StackPanel>
+											<Image Source="{Binding SampleShot}" Stretch="Uniform" SnapsToDevicePixels="True" RenderOptions.BitmapScalingMode="NearestNeighbor"></Image>
+											<TextBlock HorizontalAlignment="Center" VerticalAlignment="Center" Text="{Binding DeviceName}"></TextBlock>
+											<TextBlock HorizontalAlignment="Center" VerticalAlignment="Center"><Run FontWeight="SemiBold" Text="{Binding ResolutionString, Mode=OneWay}"/></TextBlock>
+											<!--</Run> Scale: <Run FontWeight="SemiBold" Text="{Binding ScaleFactor, StringFormat={}{0}%}"></Run>-->
+										</StackPanel>
+									</con:ExtendedButton>
+								</DataTemplate>
+							</ItemsControl.ItemTemplate>
+							<ItemsControl.ItemsPanel>
+								<ItemsPanelTemplate>
+									<WrapPanel Orientation="Horizontal"></WrapPanel>
+								</ItemsPanelTemplate>
+							</ItemsControl.ItemsPanel>
+						</ItemsControl>
+						</ScrollViewer>
+					</StackPanel>
 				</Expander>
 			</Grid>
 			<!--Others-->
@@ -174,11 +196,53 @@
 					</StackPanel>
 				</Expander>
 				<Expander Grid.Row="2" Header="Other Details"  Style="{StaticResource ExpanderModernDefaultStyle}" IsExpanded="True">
-					<con:ExtendedCheckBox Margin="20,0,0,0" Text="Is Showing Grid inside Chosen Area" Info="(Only in Frame Mode)" IsChecked="{Binding IsShowingReferenceLines}"></con:ExtendedCheckBox>
+					<StackPanel>
+						<con:ExtendedCheckBox Margin="20,5,0,0" Text="Is Showing Grid inside Chosen Area" Info="(Only in Frame Mode)" IsChecked="{Binding IsShowingReferenceLines}"></con:ExtendedCheckBox>
+						<StackPanel Orientation="Horizontal" Margin="10,5,0,0">
+							<TextBlock Margin="10,0,0,0" VerticalAlignment="Center" HorizontalAlignment="Center">White Flashing Duration: </TextBlock>
+							<con:ExtendedTextBox Margin="5" Style="{StaticResource ExtendedTextBox_ValidationError}" 
+							MaxWidth="200" HorizontalAlignment="Left" VerticalAlignment="Center" AllowSpacing="False" AllowedCharacters="0123456789."
+							>
+								<con:ExtendedTextBox.Text>
+									<Binding Path="WhiteDipDuration" UpdateSourceTrigger="PropertyChanged" Converter="{StaticResource DoubleToStringConverter}">
+										<Binding.ValidationRules>
+											<util:TextboxDoubleValidationRules Min="0" Max="10"></util:TextboxDoubleValidationRules>
+										</Binding.ValidationRules>
+									</Binding>
+								</con:ExtendedTextBox.Text>
+							</con:ExtendedTextBox>
+							<TextBlock Margin="0,0,0,0" VerticalAlignment="Center" HorizontalAlignment="Center">s</TextBlock>
+						</StackPanel>
+					</StackPanel>
 				</Expander>
 			</Grid>
 
-
+			<!--About panel-->
+			<Grid DockPanel.Dock="Top" x:Name="gr_About" Visibility="{Binding ElementName=extrb_About, Path=IsChecked, Mode=OneWay, Converter={StaticResource BooleanToVisibilityConverter}}">
+				<Expander Header="This application" Style="{StaticResource ExpanderModernDefaultStyle}" IsExpanded="True" Margin="0,0,0,10">
+					<Expander.Resources>
+						<Style TargetType="{x:Type TextBlock}">
+							<Setter Property="Margin" Value="20,5,0,5"></Setter>
+						</Style>
+					</Expander.Resources>
+					<StackPanel>
+						<TextBlock Text="Version:   0.1" xml:space="preserve"></TextBlock>
+						<TextBlock Text="Author:    Xy Huang" xml:space="preserve"></TextBlock>
+						<StackPanel Orientation="Horizontal">
+						<TextBlock Text="Updates / Bugs report:    " xml:space="preserve"></TextBlock>
+						<!--<TextBlock Margin="0,0,0,0" VerticalAlignment="Center">
+						<Hyperlink NavigateUri="https://github.com/XyLearningProgramming/ScreensShots" RequestNavigate="Hyperlink_RequestNavigate">Github</Hyperlink>
+						</TextBlock>
+						<TextBlock Margin="20,0,0,0" VerticalAlignment="Center">
+							<Hyperlink NavigateUri="https://github.com/XyLearningProgramming/ScreensShots" RequestNavigate="Hyperlink_RequestNavigate">xinyu@fishesplace.com</Hyperlink>
+						</TextBlock>-->
+							<con:ExtendedButton x:Name="extb_Github" Text="Github" Click="extb_Github_Click" Icon="{StaticResource appbar_social_github_octocat_solid}" ContentWidth="30" ContentHeight="30" BorderThickness="0"></con:ExtendedButton>
+							<con:ExtendedButton x:Name="extb_Mail" Text="xinyu@fishesplace.com" Icon="{StaticResource appbar_email}"
+							Margin="20,0,0,0" ContentWidth="30" ContentHeight="30" BorderThickness="0"></con:ExtendedButton>
+						</StackPanel>
+					</StackPanel>
+				</Expander>
+			</Grid>
 			<DockPanel LastChildFill="False" DockPanel.Dock="Bottom" Margin="10">
 				<con:ExtendedButton x:Name="bt_ApplyAll" DockPanel.Dock="Right" Style="{StaticResource Style.Button.Horizontal}" Margin="5,0,0,0" Text="Confirm" Click="bt_ApplyAll_Click" Icon="{StaticResource appbar_check}"></con:ExtendedButton>
 				<!--<con:ExtendedButton x:Name="bt_Cancel" DockPanel.Dock="Right" Style="{StaticResource Style.Button.Horizontal}" Text="Cancel" Click="bt_Cancel_Click" Icon="{StaticResource appbar_close}"></con:ExtendedButton>-->

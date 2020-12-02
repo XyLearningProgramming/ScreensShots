@@ -22,15 +22,15 @@
 		</DrawingBrush.Drawing>
 	</DrawingBrush>
 
-	<DrawingBrush x:Key="appbar_close" Stretch="Uniform" AlignmentX="Center" AlignmentY="Center">
+	<DrawingBrush x:Key="appbar_close_Inner" Stretch="Uniform" AlignmentX="Center" AlignmentY="Center">
 		<DrawingBrush.Drawing>
-			<GeometryDrawing Brush="{DynamicResource IconDefaultBrush}" Geometry="F1 M 26.9166,22.1667L 37.9999,33.25L 49.0832,22.1668L 53.8332,26.9168L 42.7499,38L 53.8332,49.0834L 49.0833,53.8334L 37.9999,42.75L 26.9166,53.8334L 22.1666,49.0833L 33.25,38L 22.1667,26.9167L 26.9166,22.1667 Z "></GeometryDrawing>
+			<GeometryDrawing Brush="{DynamicResource IconBrush}" Geometry="F1 M 26.9166,22.1667L 37.9999,33.25L 49.0832,22.1668L 53.8332,26.9168L 42.7499,38L 53.8332,49.0834L 49.0833,53.8334L 37.9999,42.75L 26.9166,53.8334L 22.1666,49.0833L 33.25,38L 22.1667,26.9167L 26.9166,22.1667 Z "></GeometryDrawing>
 		</DrawingBrush.Drawing>
 	</DrawingBrush>
 
-	<DrawingBrush x:Key="appbar_check" Stretch="Uniform" AlignmentX="Center" AlignmentY="Center">
+	<DrawingBrush x:Key="appbar_check_Inner" Stretch="Uniform" AlignmentX="Center" AlignmentY="Center">
 		<DrawingBrush.Drawing>
-			<GeometryDrawing Brush="{DynamicResource IconDefaultBrush}" Geometry="F1 M 23.7501,33.25L 34.8334,44.3333L 52.2499,22.1668L 56.9999,26.9168L 34.8334,53.8333L 19.0001,38L 23.7501,33.25 Z "></GeometryDrawing>
+			<GeometryDrawing Brush="{DynamicResource IconBrush}" Geometry="F1 M 23.7501,33.25L 34.8334,44.3333L 52.2499,22.1668L 56.9999,26.9168L 34.8334,53.8333L 19.0001,38L 23.7501,33.25 Z "></GeometryDrawing>
 		</DrawingBrush.Drawing>
 	</DrawingBrush>
 </ResourceDictionary>

@@ -149,9 +149,6 @@ namespace LogSystemShared
 							LogWriter.WriteLine(e.Message, "Error enumerating old logs");
 						}
 					}
-				}
-				else
-				{
 					// if log file doesn't exist 
 					File.Create(Constants.LogFileName);
 				}

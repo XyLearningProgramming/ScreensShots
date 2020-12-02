@@ -1,5 +1,6 @@
 ﻿using ScreenShotWindows.Utils;
 using ScreenShotWindows.Utils.Interop;
+using ScreenShotWindows.Controls;
 using LogSystemShared;
 using System;
 using System.Collections.Generic;
@@ -32,10 +33,12 @@ namespace ScreenShotWindows
 	[TemplatePart(Name = ElementMaskAreaTop, Type = typeof(FrameworkElement))]
 	[TemplatePart(Name = ElementMaskAreaRight, Type = typeof(FrameworkElement))]
 	[TemplatePart(Name = ElementMaskAreaBottom, Type = typeof(FrameworkElement))]
-	[TemplatePart(Name = ElementStackedButtons, Type = typeof(StackPanel))]
+	[TemplatePart(Name = ElementStackedButtons, Type = typeof(Grid))]
 	[TemplatePart(Name = ElementTargetArea, Type = typeof(InkCanvas))]
 	[TemplatePart(Name = ElementMagnifier, Type = typeof(FrameworkElement))]
 	[TemplatePart(Name = ElementHintGrid, Type = typeof(GridWithSolidLines))]
+	[TemplatePart(Name = ElementInputWidthBox, Type = typeof(PixIntegerBox))]
+	[TemplatePart(Name = ElementInputHeightBox, Type = typeof(PixIntegerBox))]
 	internal class ScreensShotWindows : System.Windows.Window, INotifyPropertyChanged
 	{
 		#region fields
@@ -67,6 +70,8 @@ namespace ScreenShotWindows
 		private const string ElementMagnifier = "PART_Magnifier";
 		private const string ElementHintGrid = "PART_HintGrid";
 		private const string ElementStackedButtons = "PART_StackedButtons";
+		private const string ElementInputWidthBox = "PART_pib_Width";
+		private const string ElementInputHeightBox = "PART_pib_Height";
 		private readonly string ScreenShotWindowStyleString = "ScreenShotWindowStyle";
 		#endregion
 
@@ -83,9 +88,17 @@ namespace ScreenShotWindows
 
 		internal FrameworkElement Magnifier { get; set; }
 
-		internal StackPanel StackedButtons { get; set; }
+		internal Grid StackedButtons { get; set; }
+
+		internal PixIntegerBox InputWidthBox { get; set; }
+		internal PixIntegerBox InputHeightBox { get; set; }
 
 		internal GridWithSolidLines HintGrid { get; set; }
+
+		/// <summary>
+		/// The most important property: how this window &its image is scaled by wpf
+		/// </summary>
+		public double ScaleFactor { get; private set; }
 
 		public int TargetAreaMoveGap { get; set; } = 1;
 		public int TargetAreaMovingBigGap { get; set; } = 5;
@@ -94,8 +107,8 @@ namespace ScreenShotWindows
 		public InteropStructs.POINT MagnifierOffset { get; private set; } = new InteropStructs.POINT(5, 25);
 		public List<Tuple<IntPtr, InteropStructs.RECT>> AllWinHandlers { get; set; } = new List<Tuple<IntPtr, InteropStructs.RECT>>();
 
-		public InteropStructs.RECT TargetAreaRECT { get => new InteropStructs.RECT((int)TargetArea.Margin.Left, (int)TargetArea.Margin.Top, (int)TargetArea.Margin.Left + (int)TargetArea.Width, (int)TargetArea.Margin.Top + (int)TargetArea.Height); }
-		public InteropStructs.RECT ThisRECT { get => new InteropStructs.RECT((int)this.Left, (int)this.Top, (int)this.Left + (int)this.Width, (int)this.Top + (int)this.Height); }
+		public InteropStructs.RECT TargetAreaRECT { get => new InteropStructs.RECT(Convert.ToInt32(TargetArea.Margin.Left), Convert.ToInt32(TargetArea.Margin.Top), Convert.ToInt32(TargetArea.Margin.Left) + Convert.ToInt32(TargetArea.Width), Convert.ToInt32(TargetArea.Margin.Top) + Convert.ToInt32(TargetArea.Height)); }
+		public InteropStructs.RECT ThisRECT { get => new InteropStructs.RECT(Convert.ToInt32(this.Left), Convert.ToInt32(this.Top), Convert.ToInt32(this.Left) + Convert.ToInt32(this.Width), Convert.ToInt32(this.Top) + Convert.ToInt32(this.Height)); }
 		public TargetAreaSelectingStatus TargetAreaSelectingStatus { get; set; } = TargetAreaSelectingStatus.Empty;
 
 		#region datacontext 
@@ -107,35 +120,29 @@ namespace ScreenShotWindows
 		public Visibility StackedButtonsVisibility { get => _stackedButtonsVisibility;
 			set => this.Mutate(ref _stackedButtonsVisibility, value, e => PropertyChanged?.Invoke(this, e));
 		}
-		private int _inputWidthValue = 5;
+		private int _inputWidthValue = 100;
 		public int InputWidthValue 
 		{ 
 			get => _inputWidthValue;
-			set 
-			{ 
+			set
+			{
 				if(this.Mutate(ref _inputWidthValue, value, e => PropertyChanged?.Invoke(this, e)))
 				{
-					// let commands control this behavior
-
-					//TargetArea.Width = value;
-					//var sizeTmp = TargetAreaSize;
-					//sizeTmp.Width = value;
-					//TargetAreaSize = sizeTmp;
+					var param = new TryChangeTargetAreaCommandParameter() { intendedWidth = InputWidthBox.Value, intendedHeight = InputHeightBox.Value };
+					ScreenShotWindowsCommands.TryChangeTargetAreaSize.TryExecute(param);
 				}
 			}
 		}
-		private int _inputHeightValue = 5;
+		private int _inputHeightValue = 100;
 		public int InputHeightValue
 		{
 			get => _inputHeightValue;
-			set
-			{
+			set 
+			{ 
 				if(this.Mutate(ref _inputHeightValue, value, e => PropertyChanged?.Invoke(this, e)))
 				{
-					//TargetArea.Height = value;
-					//var sizeTmp = TargetAreaSize;
-					//sizeTmp.Height = value;
-					//TargetAreaSize = sizeTmp;
+					var param = new TryChangeTargetAreaCommandParameter() { intendedWidth = InputWidthBox.Value, intendedHeight = InputHeightBox.Value };
+					ScreenShotWindowsCommands.TryChangeTargetAreaSize.TryExecute(param);
 				}
 			}
 		}
@@ -246,7 +253,7 @@ namespace ScreenShotWindows
 				{
 					InteropMethods.GetWindowRect_(wnd, out InteropStructs.RECT rect);
 					// convert rect to local rect
-					InteropStructs.RECT relative = rect.Translation(new InteropStructs.POINT(-(int)this.Left, -(int)this.Top));
+					InteropStructs.RECT relative = rect.Translation(new InteropStructs.POINT(-Convert.ToInt32(this.Left), -Convert.ToInt32(this.Top)));
 					AllWinHandlers.Add(new Tuple<IntPtr, InteropStructs.RECT>(wnd, relative));
 					// LogWriter.WriteLine($"Added window at {relative.Top}, {relative.Left}, width {relative.Width}, height {relative.Height}");
 				}
@@ -272,8 +279,10 @@ namespace ScreenShotWindows
 			MaskAreaBottom = GetTemplateChild(ElementMaskAreaBottom) as FrameworkElement;
 			TargetArea = GetTemplateChild(ElementTargetArea) as FrameworkElement;
 			Magnifier = GetTemplateChild(ElementMagnifier) as FrameworkElement;
-			StackedButtons = GetTemplateChild(ElementStackedButtons) as StackPanel;
+			StackedButtons = GetTemplateChild(ElementStackedButtons) as Grid;
 			HintGrid = GetTemplateChild(ElementHintGrid) as GridWithSolidLines;
+			InputWidthBox = GetTemplateChild(ElementInputWidthBox) as PixIntegerBox;
+			InputHeightBox = GetTemplateChild(ElementInputHeightBox) as PixIntegerBox;
 			GenerateReferenceDotsLines(HintGrid, _userSettings.IsShowingReferenceLine);
 			IsPreviewShowingReferenceLines = _userSettings.IsShowingReferenceLine;
 
@@ -282,7 +291,24 @@ namespace ScreenShotWindows
 				MagnifierViewBoxSize = new Size(30, 30); // 121 121
 			}
 
+			//// register on input text change event
+			//InputWidthBox.ValueChanged += ScreensShotWindows_InputTextChanged;
+			//InputHeightBox.ValueChanged += ScreensShotWindows_InputTextChanged;
 		}
+
+		///// <summary>
+		///// Receive custom input target area size in selecting phase
+		///// </summary>
+		///// <param name="sender"></param>
+		///// <param name="e"></param>
+		//private void ScreensShotWindows_InputTextChanged(object sender, RoutedEventArgs e)
+		//{
+		//	if(ScreenShotWindowsCommands.TryChangeTargetAreaSize.CanExecute(null))
+		//	{
+		//		//LogWriter.WriteLine("Input's invoking resize command");
+		//		ScreenShotWindowsCommands.TryChangeTargetAreaSize.Execute(new TryChangeTargetAreaCommandParameter() { intendedWidth = InputWidthBox.Value, intendedHeight = InputHeightBox.Value });
+		//	}
+		//}
 
 		private void ScreensShotWindowsLoaded(object sender, EventArgs args)
 		{
@@ -292,6 +318,8 @@ namespace ScreenShotWindows
 			RenderOptions.SetBitmapScalingMode(image, BitmapScalingMode.Fant);
 			LogWriter.WriteLine($"Reflected image size: width {Convert.ToInt32(image.Source.Width)}, height {Convert.ToInt32(image.Source.Height)}");
 			Canvas.Children.Add(image); // canvas is transparent now
+
+			ScaleFactor = image.Source.Width * 1.0 / _currentScreen.Bounds.Width;
 
 			// rescale to original if necessary
 			this.Width = _currentScreen.Bounds.Width;
@@ -343,6 +371,9 @@ namespace ScreenShotWindows
 				}
 			}
 
+			//InputHeightBox.TextChanged -= ScreensShotWindows_InputTextChanged;
+			//InputWidthBox.TextChanged -= ScreensShotWindows_InputTextChanged;
+
 			this.Loaded -= ScreensShotWindowsLoaded;
 			this.Closed -= ScreenShotWindowsClosed;
 		}
@@ -379,8 +410,10 @@ namespace ScreenShotWindows
 						// floating button visibility adjust
 						window.StackedButtonsVisibility = Visibility.Visible;
 						// change floating button input box
-						window.InputHeightValue = Convert.ToInt32(window.TargetArea.Height);
-						window.InputWidthValue = Convert.ToInt32(window.TargetArea.Width);
+						// notice input is scaled value. This bug costs me 2 hours
+						var scaledPt = window.GetPointAfterScaling(new InteropStructs.POINT(Convert.ToInt32(window.TargetArea.Width), Convert.ToInt32(window.TargetArea.Height)));
+						window.InputHeightValue = scaledPt.Y;
+						window.InputWidthValue = scaledPt.X;
 					}
 					else if(OldStatus == ScreenShotWindowStatus.IsSelecting && NewStatus!= ScreenShotWindowStatus.IsSelecting)
 					{
@@ -394,6 +427,7 @@ namespace ScreenShotWindows
 			Debug.Assert(container != null);
 			if(IsShowingReferenceLine)
 			{
+				// TODO: offset
 				// 12 dots + 4 lines
 				// *--*--*--*
 				// |  |  |  |
@@ -409,7 +443,9 @@ namespace ScreenShotWindows
 					rect.Style = _referenceRectStyle;
 					Debug.Assert(_referenceRectStyle!=null);
 					rect.SetValue(Grid.ColumnProperty, col);
-					rect.SetValue(Grid.RowProperty, 0); 
+					rect.SetValue(Grid.RowProperty, 0);
+					rect.Margin = new Thickness(-3, -3, 0, 0);
+
 					_referenceRectsInContainer.Add(rect);
 					container.Children.Add(rect);
 
@@ -418,6 +454,8 @@ namespace ScreenShotWindows
 					rect2.Style = _referenceRectStyle;
 					rect2.SetValue(Grid.ColumnProperty, col);
 					rect2.SetValue(Grid.RowProperty, 2);
+					rect2.Margin = new Thickness(-3, 0, 0, -3);
+
 					_referenceRectsInContainer.Add(rect2);
 					container.Children.Add(rect2);
 
@@ -430,6 +468,7 @@ namespace ScreenShotWindows
 							tmp.Style = _referenceRectStyle;
 							tmp.SetValue(Grid.ColumnProperty, col);
 							tmp.SetValue(Grid.RowProperty, row);
+							tmp.Margin = new Thickness(col == 0 ? -3 : 0, -3, col == 2 ? -3 : 0, 0);
 							_referenceRectsInContainer.Add(tmp);
 							container.Children.Add(tmp);
 						}
@@ -440,6 +479,7 @@ namespace ScreenShotWindows
 				rect3.Style = _referenceRectStyle;
 				rect3.SetValue(Grid.ColumnProperty, 2);
 				rect3.SetValue(Grid.RowProperty, 0);
+				rect3.Margin = new Thickness(0, -3, -3, 0);
 				_referenceRectsInContainer.Add(rect3);
 				container.Children.Add(rect3);
 
@@ -448,6 +488,7 @@ namespace ScreenShotWindows
 				rect4.Style = _referenceRectStyle;
 				rect4.SetValue(Grid.ColumnProperty, 2);
 				rect4.SetValue(Grid.RowProperty, 2);
+				rect4.Margin = new Thickness(0, 0, -3, -3);
 				_referenceRectsInContainer.Add(rect4);
 				container.Children.Add(rect4);
 			}
@@ -496,6 +537,13 @@ namespace ScreenShotWindows
 			}
 			if(WindowStatus == ScreenShotWindowStatus.IsSelecting)
 			{
+				//if(Keyboard.IsKeyDown(Key.Enter))
+				//{
+				//	// if enter then save and close immediately
+				//	_saveScreenShots = true;
+				//	this.Close();
+				//	return;
+				//}
 				bool isCtrlPressed = Keyboard.IsKeyDown(Key.LeftCtrl) || Keyboard.IsKeyDown(Key.RightCtrl);
 				ReSizeTargetAreaCommandParameter reparam;
 				switch(e.Key)
@@ -530,7 +578,8 @@ namespace ScreenShotWindows
 			{
 				WindowStatus = ScreenShotWindowStatus.IsSelecting;
 				e.Handled = true;
-			}else if(WindowStatus == ScreenShotWindowStatus.IsSelecting)
+			}
+			else if(WindowStatus == ScreenShotWindowStatus.IsSelecting)
 			{
 				if(TargetAreaSelectingStatus != TargetAreaSelectingStatus.Empty)
 				{
@@ -538,6 +587,9 @@ namespace ScreenShotWindows
 					ScreenShotWindowsCommands.UpdateMouseCursorCommand.TryExecute(new UpdateMouseCurosrCommandParameter() { MouseLocalPoint = new InteropStructs.POINT(e.GetPosition(this)), SnapLength = _mouseCursorHitThreshold });
 				}
 				e.Handled = true;
+
+				// allow interaction with stacked buttons
+				if(StackedButtons.IsMouseOver) e.Handled = false;
 			}
 		}
 		protected override void OnPreviewMouseLeftButtonDown(MouseButtonEventArgs e)
@@ -556,6 +608,10 @@ namespace ScreenShotWindows
 				_selectingMouseStartPosition = e.GetPosition(this);
 				_selectingMousePressedLastFramePosition = e.GetPosition(this);
 				e.Handled = true;
+
+				// allow interaction with stacked buttons
+				if(StackedButtons.IsMouseOver) e.Handled = false;
+
 				return;
 			}
 		}
@@ -572,6 +628,14 @@ namespace ScreenShotWindows
 				}
 				else if(WindowStatus == ScreenShotWindowStatus.IsSelecting)
 				{
+
+					// allow interaction with stacked buttons
+					if(StackedButtons.IsMouseOver)
+					{
+						e.Handled = false;
+						return;
+					}
+
 					_saveScreenShots = true;
 					this.Close();
 					e.Handled = true;
@@ -640,7 +704,7 @@ namespace ScreenShotWindows
 						TargetAreaSelectingStatus = TargetAreaSelectingStatus.Dragging;
 						// drag 
 						Vector distance = mousePos - _selectingMousePressedLastFramePosition;
-						ReSizeTargetAreaCommandParameter reparam = new ReSizeTargetAreaCommandParameter() { TargetRect = rect.Translation(new InteropStructs.POINT((int)distance.X, (int)distance.Y)) };
+						ReSizeTargetAreaCommandParameter reparam = new ReSizeTargetAreaCommandParameter() { TargetRect = rect.Translation(new InteropStructs.POINT(Convert.ToInt32(distance.X), Convert.ToInt32(distance.Y))) };
 						ScreenShotWindowsCommands.ResizeTargetAreaCommand.TryExecute(reparam);
 					}
 					else
@@ -716,6 +780,13 @@ namespace ScreenShotWindows
 			}
 			else if(WindowStatus == ScreenShotWindowStatus.IsSelecting)
 			{
+				// allow interaction with stacked buttons
+				if(StackedButtons.IsMouseOver)
+				{
+					e.Handled = false;
+					return;
+				}
+
 				WindowStatus = ScreenShotWindowStatus.Empty;
 				// snap target area & move magnifier
 				MoveCommandParameter targetAreaMoveParam = new MoveCommandParameter() { targetElement = TargetArea, targetPoint = new InteropStructs.POINT(e.GetPosition(this)) };
@@ -748,6 +819,7 @@ namespace ScreenShotWindows
 		{
 			return ScreenShot.GetSnapShot(this, new InteropStructs.RECT(Convert.ToInt32(this.Left), Convert.ToInt32(this.Top), Convert.ToInt32(this.Width + this.Left), Convert.ToInt32(this.Height + this.Top)));
 		}
+
 		//private BitmapImage GetWindowSnapShot(IntPtr windowHandler)
 		//{
 		//	try
@@ -776,7 +848,7 @@ namespace ScreenShotWindows
 		//		using var ms = new MemoryStream();
 		//		InteropMethods.Gdip.GdipGetImageEncodersSize_(out var numEncoders, out var size).GdipExceptionHandler();
 
-		//		var memory = Marshal.AllocHGlobal(size);
+		//		var memory = Marshal.AllocHGlobal(size); 
 		//		InteropMethods.Gdip.GdipGetImageEncoders_(numEncoders, size, memory).GdipExceptionHandler();
 
 		//		var codecInfo = ImageCodecInfo.ConvertFromMemory(memory, numEncoders).FirstOrDefault(item => item.FormatID.Equals(BmpGuid));
@@ -910,28 +982,34 @@ namespace ScreenShotWindows
 		/// <returns></returns>
 		public InteropStructs.RECT GetRectAfterScaling(InteropStructs.RECT rect)
 		{
-			if(!ScreenResolutionInferrer.IsUsingDifferentDpi(_currentScreen)) return new InteropStructs.RECT(rect);
-			double scaleFactor = ScreenResolutionInferrer.GetInferredScale(_currentScreen);
-			return rect.Scaling(scaleFactor);
+			//if(!ScreenResolutionInferrer.IsUsingDifferentDpi(_currentScreen)) return new InteropStructs.RECT(rect);
+			//double scaleFactor = ScreenResolutionInferrer.GetInferredScale(_currentScreen);
+			//return rect.Scaling(scaleFactor);
+			return rect.Scaling(this.ScaleFactor);
 		}
 
 		public InteropStructs.POINT GetPointAfterScaling(InteropStructs.POINT pt)
 		{
-			if(!ScreenResolutionInferrer.IsUsingDifferentDpi(_currentScreen)) return new InteropStructs.POINT(pt);
-			double scaleFactor = ScreenResolutionInferrer.GetInferredScale(_currentScreen);
-			return pt.Scaling(scaleFactor);
+			//if(!ScreenResolutionInferrer.IsUsingDifferentDpi(_currentScreen)) return new InteropStructs.POINT(pt);
+			//double scaleFactor = ScreenResolutionInferrer.GetInferredScale(_currentScreen);
+			//return pt.Scaling(scaleFactor);
+			return pt.Scaling(this.ScaleFactor);
 		}
 		public InteropStructs.RECT GetRectBeforeScaling(InteropStructs.RECT rect)
 		{
-			if(!ScreenResolutionInferrer.IsUsingDifferentDpi(_currentScreen)) return new InteropStructs.RECT(rect);
-			double scaleFactor = 1.0/ScreenResolutionInferrer.GetInferredScale(_currentScreen);
-			return rect.Scaling(scaleFactor);
+			//if(!ScreenResolutionInferrer.IsUsingDifferentDpi(_currentScreen)) return new InteropStructs.RECT(rect);
+			//double scaleFactor = 1.0/ScreenResolutionInferrer.GetInferredScale(_currentScreen);
+			//return rect.Scaling(scaleFactor);
+			double _factor = 1.0 / this.ScaleFactor;
+			return rect.Scaling(_factor);
 		}
 		public InteropStructs.POINT GetPointBeforeScaling(InteropStructs.POINT pt)
 		{
-			if(!ScreenResolutionInferrer.IsUsingDifferentDpi(_currentScreen)) return new InteropStructs.POINT(pt);
-			double scaleFactor = 1.0/ScreenResolutionInferrer.GetInferredScale(_currentScreen);
-			return pt.Scaling(scaleFactor);
+			//if(!ScreenResolutionInferrer.IsUsingDifferentDpi(_currentScreen)) return new InteropStructs.POINT(pt);
+			//double scaleFactor = 1.0/ScreenResolutionInferrer.GetInferredScale(_currentScreen);
+			//return pt.Scaling(scaleFactor);
+			double _factor = 1.0 / this.ScaleFactor;
+			return pt.Scaling(_factor);
 		}
 		#endregion
 	}
@@ -962,6 +1040,14 @@ namespace ScreenShotWindows
 				}else if(extension == ".png")
 				{
 					PngBitmapEncoder encoder = new PngBitmapEncoder();
+					encoder.Frames.Add(BitmapFrame.Create(image));
+					using(FileStream fs = new System.IO.FileStream(imageName, System.IO.FileMode.Create))
+					{
+						encoder.Save(fs);
+					}
+				}else if(extension == ".jpeg")
+				{
+					JpegBitmapEncoder encoder = new JpegBitmapEncoder();
 					encoder.Frames.Add(BitmapFrame.Create(image));
 					using(FileStream fs = new System.IO.FileStream(imageName, System.IO.FileMode.Create))
 					{

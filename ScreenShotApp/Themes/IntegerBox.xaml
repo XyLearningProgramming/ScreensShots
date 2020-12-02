@@ -1,0 +1,104 @@
+﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:n="clr-namespace:ScreenShotApp.Controls"
+					xmlns:s="clr-namespace:System;assembly=mscorlib">
+	<!--IntegerBox Style-->
+	<Style TargetType="{x:Type n:IntegerBox}">
+		<Setter Property="VerticalContentAlignment" Value="Center"/>
+		<Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+		<Setter Property="VerticalAlignment" Value="Stretch"/>
+		<Setter Property="HorizontalAlignment" Value="Stretch"/>
+		<Setter Property="BorderThickness" Value="1"/>
+		<Setter Property="Height" Value="23"/>
+		<Setter Property="Foreground" Value="{DynamicResource Element.Foreground}"/>
+		<Setter Property="Background" Value="{DynamicResource Element.Background}"/>
+		<Setter Property="BorderBrush" Value="{DynamicResource Element.Border}"/>
+		<Setter Property="MaxLength" Value="9"/>
+		<Setter Property="Padding" Value="2,0"/>
+
+		<Setter Property="Template">
+			<Setter.Value>
+				<ControlTemplate TargetType="{x:Type n:IntegerBox}">
+					<Border x:Name="border" Width="{TemplateBinding Width}" Height="{TemplateBinding Height}" 
+                            BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}"
+                            Background="{TemplateBinding Background}" VerticalAlignment="{TemplateBinding VerticalAlignment}"
+                            HorizontalAlignment="{TemplateBinding HorizontalAlignment}" SnapsToDevicePixels="True">
+						<Border x:Name="InnerBorder">
+							<Grid x:Name="InnerGrid">
+								<ScrollViewer x:Name="PART_ContentHost" Focusable="False" HorizontalScrollBarVisibility="Hidden"
+                                              VerticalScrollBarVisibility="Hidden" VerticalContentAlignment="{TemplateBinding VerticalContentAlignment}"/>
+
+								<TextBlock x:Name="WatermarkTextBlock" Text="{TemplateBinding Watermark}" IsHitTestVisible="False" Foreground="{DynamicResource Element.Foreground.Watermark}"
+                                           Padding="3,2" Visibility="Collapsed"/>
+
+								<Path x:Name="InnerPath" Data="M 0,0 6,6 0,6 z" Fill="{DynamicResource Element.Border.Required}" HorizontalAlignment="Left" 
+                                      VerticalAlignment="Bottom" Opacity="0" ToolTip="{DynamicResource S.Required}"/>
+							</Grid>
+						</Border>
+					</Border>
+
+					<ControlTemplate.Triggers>
+						<MultiTrigger>
+							<MultiTrigger.Conditions>
+								<Condition Property="IsObligatory" Value="True"/>
+								<Condition Property="Text" Value="{x:Static s:String.Empty}"/>
+							</MultiTrigger.Conditions>
+
+							<Setter Property="BorderBrush" TargetName="border" Value="{DynamicResource Element.Border.Required}"/>
+							<Setter Property="Opacity" TargetName="InnerPath" Value="1"/>
+						</MultiTrigger>
+
+						<MultiTrigger>
+							<MultiTrigger.Conditions>
+								<Condition Property="IsObligatory" Value="True"/>
+								<Condition Property="Value" Value="0"/>
+							</MultiTrigger.Conditions>
+
+							<Setter Property="BorderBrush" TargetName="border" Value="{DynamicResource Element.Border.Required}"/>
+							<Setter Property="Opacity" TargetName="InnerPath" Value="1"/>
+						</MultiTrigger>
+
+						<Trigger Property="IsReadOnly" Value="True">
+							<Setter Property="Background" TargetName="border" Value="{DynamicResource Element.Background.ReadOnly}"/>
+						</Trigger>
+						<Trigger Property="IsEnabled" Value="False">
+							<Setter Property="Opacity" TargetName="border" Value="0.7"/>
+						</Trigger>
+						<Trigger Property="IsMouseOver" Value="True">
+							<Setter Property="BorderBrush" TargetName="border" Value="{DynamicResource Element.Border.Hover}"/>
+							<Setter Property="Fill" TargetName="InnerPath" Value="{DynamicResource Element.Border.Hover}"/>
+						</Trigger>
+
+						<MultiTrigger>
+							<MultiTrigger.Conditions>
+								<Condition Property="Text" Value="{x:Static s:String.Empty}"/>
+								<Condition Property="IsKeyboardFocused" Value="False"/>
+							</MultiTrigger.Conditions>
+
+							<Setter Property="Visibility" TargetName="WatermarkTextBlock" Value="Visible"/>
+						</MultiTrigger>
+						<MultiTrigger>
+							<MultiTrigger.Conditions>
+								<Condition Property="Text" Value="{x:Null}"/>
+								<Condition Property="IsKeyboardFocused" Value="False"/>
+							</MultiTrigger.Conditions>
+
+							<Setter Property="Visibility" TargetName="WatermarkTextBlock" Value="Visible"/>
+						</MultiTrigger>
+
+						<MultiTrigger>
+							<MultiTrigger.Conditions>
+								<Condition Property="IsKeyboardFocused" Value="True"/>
+								<Condition Property="IsReadOnly" Value="False"/>
+							</MultiTrigger.Conditions>
+
+							<Setter Property="BorderBrush" TargetName="border" Value="{DynamicResource Element.Border.Pressed}"/>
+							<Setter Property="Background" TargetName="border" Value="{DynamicResource Element.Background.Focused}"/>
+							<Setter Property="Fill" TargetName="InnerPath" Value="{DynamicResource Element.Border.Pressed}"/>
+						</MultiTrigger>
+					</ControlTemplate.Triggers>
+				</ControlTemplate>
+			</Setter.Value>
+		</Setter>
+	</Style>
+</ResourceDictionary>

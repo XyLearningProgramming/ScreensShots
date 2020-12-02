@@ -13,6 +13,7 @@ using UserSettingsStruct;
 using System.Windows.Input;
 using ScreenShotWindows;
 using ScreenShotApp.ViewModels;
+using System.Diagnostics;
 
 namespace ScreenShotApp.Utils
 {
@@ -198,6 +199,9 @@ namespace ScreenShotApp.Utils
 					using(var writer = XmlWriter.Create(LocalPath, settings))
 						XamlWriter.Save(loadedSettings, writer);
 
+					if(!Directory.Exists(AppDataPath))
+						Directory.CreateDirectory(Path.GetDirectoryName(AppDataPath));
+
 					File.Copy(LocalPath, AppDataPath, true);
 					LogSystemShared.LogWriter.WriteLine($"saved user setting: {LocalPath} and {AppDataPath}");
 				}
@@ -260,8 +264,12 @@ namespace ScreenShotApp.Utils
 			{
 				// set current res in dict
 				var screen = System.Windows.Forms.Screen.AllScreens.Where(s => s.DeviceName == screenInfoModel.DeviceName).FirstOrDefault();
-				ScreenResolutionInferrer.ForceChangeStoredResolution(screen, screenInfoModel.Resolution.width, screenInfoModel.Resolution.height);
-				return SetValue($"{screenInfoModel.Resolution.width}*{screenInfoModel.Resolution.height}", deviceName);
+				if(screen != null)
+				{
+					ScreenResolutionInferrer.ForceChangeStoredResolution(screen, screenInfoModel.Resolution.width, screenInfoModel.Resolution.height);
+					return SetValue($"{screenInfoModel.Resolution.width}*{screenInfoModel.Resolution.height}", deviceName);
+				}
+				Debug.Assert(screen != null); // how?
 			}
 			return false;
 		}

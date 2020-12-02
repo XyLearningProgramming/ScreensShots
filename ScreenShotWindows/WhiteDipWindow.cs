@@ -68,8 +68,10 @@ namespace ScreenShotWindows
 		{
 			_cachedSnapShot = ScreenShot.GetSnapShot(this, new Utils.Interop.InteropStructs.RECT(Convert.ToInt32(this.Left), Convert.ToInt32(this.Top), Convert.ToInt32(this.Width + this.Left), Convert.ToInt32(this.Height + this.Top)));
 
+
 			if(_isInstantClose)
 			{
+				if(!_isSavingToLocal) _screenShot.OnSnapped(_currentScreen, _cachedSnapShot);
 				// return result immediately, no dip white because it's too short
 				this.Close();
 				return;
@@ -92,26 +94,31 @@ namespace ScreenShotWindows
 				Duration = TimeSpan.FromSeconds(_userSettings.WhiteDipAnimDuration),
 				AutoReverse = true,
 			};
+			doubleAnimation.EasingFunction = new CircleEase() { EasingMode = EasingMode.EaseIn };
 			doubleAnimation.Completed += WhiteDipWindowAnimation_Completed;
 			ShadowCanvas.BeginAnimation(InkCanvas.OpacityProperty, doubleAnimation);
 		}
 
 		private void WhiteDipWindowAnimation_Completed(object sender, EventArgs e)
 		{
+			if(!_isSavingToLocal) _screenShot.OnSnapped(_currentScreen, _cachedSnapShot);
 			this.Close();
 			return;
 		}
 
 		private void OnWhiteDipWindowClosed(object sender, EventArgs args)
 		{
-			Clipboard.SetImage(_cachedSnapShot);
+			try
+			{
+				Clipboard.SetImage(_cachedSnapShot);
+			}
+			catch
+			{
+				LogWriter.WriteLine("setting clipboard of image failed");
+			}
 			if(_isSavingToLocal)
 			{
 				_cachedSnapShot.SaveToLocal(AbsoluteDirectory: _userSettings.ImageFolderPath, extension: "."+_userSettings.SaveFormatPreferred);
-			}
-			else
-			{
-				_screenShot.OnSnapped(_currentScreen, _cachedSnapShot);
 			}
 			_screenShot?.OnClose();
 			this.Loaded -= OnWhiteDipWindowLoaded;

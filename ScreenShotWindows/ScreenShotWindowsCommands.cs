@@ -1,5 +1,6 @@
 ﻿using ScreenShotWindows.Utils.Interop;
 using System;
+using System.Linq;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -26,18 +27,20 @@ namespace ScreenShotWindows
 		}
 
 		#region stackedButtons
-		private DelegateCommand<TryChangeTargetAreaCommandParameter> _tryChangeTargetAreaSize;
-		public DelegateCommand<TryChangeTargetAreaCommandParameter> TryChangeTargetAreaSize { get =>
-			 _tryChangeTargetAreaSize ?? (_tryChangeTargetAreaSize = new DelegateCommand<TryChangeTargetAreaCommandParameter>(
+		private DelegateCommand<ICommandParameter> _tryChangeTargetAreaSize;
+		public DelegateCommand<ICommandParameter> TryChangeTargetAreaSize { get =>
+			 _tryChangeTargetAreaSize ?? (_tryChangeTargetAreaSize = new DelegateCommand<ICommandParameter>(
 					(param) => {
+						var newParam = param as TryChangeTargetAreaCommandParameter;
 					// 1. rescale this back to original size if needed
 					// 2. clip 
 					// 3. change binding objects through clip command
 						InteropStructs.RECT rect = Root.TargetAreaRECT;
-						var rescaledWH = Root.GetPointBeforeScaling(new InteropStructs.POINT(param.intendedWidth, param.intendedHeight));
+						var rescaledWH = Root.GetPointBeforeScaling(new InteropStructs.POINT(newParam.intendedWidth, newParam.intendedHeight));
 						rect.Width = rescaledWH.X;
 						rect.Height = rescaledWH.Y;
 						MoveTargetAreaTo(rect);
+						//LogSystemShared.LogWriter.WriteLine($"Trying to input {rescaledWH.X} {rescaledWH.Y} and place target area");
 					},
 					(_) => { return Root.WindowStatus == ScreenShotWindowStatus.IsSelecting; }
 					));
@@ -53,6 +56,11 @@ namespace ScreenShotWindows
 			(_) => { Root.SaveScreenShots = false; Root.Close(); }
 			));
 		}
+
+
+		//private Dictionary<string, string> _formatToFilterDict = new Dictionary<string, string>() { ["png"] = "PNG Image (.png)|*.png", ["jpeg"] = "JPEG (.jpeg)|*.jpeg", ["bmp"] = "BMP Image (.bmp)|*.bmp" };
+		private Dictionary<int, string> _indexToExtension = new Dictionary<int, string>() { [1] = "png", [2] = "jpeg", [3] = "bmp", [4] = "" };
+		private Dictionary<string, int> _extensionToIndex = new Dictionary<string, int>() { ["png"] = 1, ["jpeg"] = 2, ["bmp"] = 3 };
 		private DelegateCommand<EmptyCommandParameter> _saveAsClickedCommand;
 		public DelegateCommand<EmptyCommandParameter> SaveAsClickedCommand {get => _saveAsClickedCommand ?? (_saveAsClickedCommand = new DelegateCommand<EmptyCommandParameter>(
 			(_) => 
@@ -60,19 +68,25 @@ namespace ScreenShotWindows
 				var SaveFileDialog = new System.Windows.Forms.SaveFileDialog()
 				{
 					InitialDirectory = Root.UserSettings.ImageFolderPath,
-					Filter = GetFilterString(Root.UserSettings.SaveFormatPreferred),
-					FileName = System.IO.Path.GetRandomFileName(),
-					DefaultExt = "." + Root.UserSettings.SaveFormatPreferred,
+					Filter = "PNG Image (.png)|*.png|JPEG (.jpeg)|*.jpeg|BMP Image (.bmp)|*.bmp|All Files (*.*)|*.*",
+					DefaultExt = Root.UserSettings.SaveFormatPreferred,
+					//FilterIndex = "PNG Image (.png)|*.png|JPEG (.jpeg)|*.jpeg|BMP Image (.bmp)|*.bmp|All Files (*.*)|*.*".Split("|").TakeWhile(s => !s.Contains(Root.UserSettings.SaveFormatPreferred)).Count() / 2,
+					FilterIndex = _extensionToIndex[Root.UserSettings.SaveFormatPreferred],
+					RestoreDirectory = true,
+					CheckFileExists = false,
+					CheckPathExists = true,
+					
 				};
-				if(SaveFileDialog.ShowDialog()== System.Windows.Forms.DialogResult.OK)
+				if(SaveFileDialog.ShowDialog()== System.Windows.Forms.DialogResult.OK && SaveFileDialog.FileName!="")
 				{
+					LogSystemShared.LogWriter.WriteLine($"{SaveFileDialog.FileName}", title: "SaveFileDiag: ");
 					InteropStructs.RECT rect = Root.TargetAreaRECT;
 					rect = Root.GetRectAfterScaling(rect);
 					try
 					{
 						CroppedBitmap image = new CroppedBitmap(Root.SnappedImage, new Int32Rect(rect.Left, rect.Top, rect.Width, rect.Height));
 						var fileInfo = new FileInfo(SaveFileDialog.FileName);
-						image.SaveToLocal(AbsoluteDirectory: fileInfo.DirectoryName, imageName: Path.GetFileNameWithoutExtension(fileInfo.Name), extension: fileInfo.Extension);
+						image.SaveToLocal(AbsoluteDirectory: fileInfo.DirectoryName, imageName: Path.GetFileNameWithoutExtension(fileInfo.Name), extension: "."+_indexToExtension[SaveFileDialog.FilterIndex]);
 						Clipboard.SetImage(image);
 					}
 					catch(Exception e)
@@ -81,7 +95,7 @@ namespace ScreenShotWindows
 						if(Root.SnappedImage != null)
 						{
 							var fileInfo = new FileInfo(SaveFileDialog.FileName);
-							Root.SnappedImage.SaveToLocal(AbsoluteDirectory: fileInfo.DirectoryName, imageName: Path.GetFileNameWithoutExtension(fileInfo.Name), extension: fileInfo.Extension);
+							Root.SnappedImage.SaveToLocal(AbsoluteDirectory: fileInfo.DirectoryName, imageName: Path.GetFileNameWithoutExtension(fileInfo.Name), extension: "."+fileInfo.Extension);
 							Clipboard.SetImage(Root.SnappedImage);
 						}
 					}
@@ -162,17 +176,17 @@ namespace ScreenShotWindows
 		#region private methods
 
 		#region stacked button control
-		private Dictionary<string, string> _formatToFilterDict = new Dictionary<string, string>() { ["png"] = "PNG (*.png)", ["jpeg"] = "JPEG (*jpeg)", ["bmp"] = "BMP (*.bmp)" };
-		private	string GetFilterString(string preferredFormat)
-		{
-			Debug.Assert(_formatToFilterDict.ContainsKey(preferredFormat));
-			List<string> filterList = new List<string>() { _formatToFilterDict[preferredFormat] };
-			foreach(var fl in _formatToFilterDict)
-			{
-				if(!filterList.Contains(fl.Value)) filterList.Add(fl.Value);
-			}
-			return string.Join('|', filterList);
-		}
+
+		//private	string GetFilterString(string preferredFormat)
+		//{
+		//	Debug.Assert(_formatToFilterDict.ContainsKey(preferredFormat));
+		//	List<string> filterList = new List<string>() { _formatToFilterDict[preferredFormat] };
+		//	foreach(var fl in _formatToFilterDict)
+		//	{
+		//		if(!filterList.Contains(fl.Value)) filterList.Add(fl.Value);
+		//	}
+		//	return string.Join('|', filterList);
+		//}
 		#endregion
 		private void SnapTargetAreaExec(InteropStructs.POINT mousePT)
 		{
@@ -249,7 +263,8 @@ namespace ScreenShotWindows
 			// move stackpanel below
 			//Root.StackedButtons.Margin = new Thickness(0, Root.TargetArea.Margin.Top + Root.TargetArea.Height + 5, Root.DesktopWindowRect.Width - Root.TargetArea.Margin.Left - Root.TargetArea.Width -5, 0);
 
-			MoveStackButtons(Root.TargetArea.Margin.Top, Root.Width- Root.TargetArea.Margin.Left- Root.TargetArea.Width, new InteropStructs.POINT(-5,5));
+			MoveStackButtons(Root.TargetArea.Margin.Top + Root.TargetArea.Height, Root.Width- Root.TargetArea.Margin.Left- Root.TargetArea.Width, new InteropStructs.POINT(5,5));
+
 			// change stackbuttons binding
 			var scaledPT = Root.GetPointAfterScaling(new InteropStructs.POINT(rect.Width, rect.Height));
 			Root.InputHeightValue = scaledPT.Y;
@@ -289,21 +304,26 @@ namespace ScreenShotWindows
 		{
 			if(Root.StackedButtons.Visibility != Visibility.Visible) return; // not visible not moving
 
-			bool isFlippingUp = Root.StackedButtons.Height + Top + offset.Y >= Root.Height ? true : false;
-			bool isFlippingRight = Root.StackedButtons.Width + Right + offset.X >= Root.Width? true: false;
+			bool isFlippingUp = Root.StackedButtons.ActualHeight + Top + offset.Y >= Root.Height ? true : false;
+			bool isFlippingRight = Root.StackedButtons.ActualWidth + Right + offset.X >= Root.Width? true: false;
+			double flippedRight = Right - offset.X - Root.StackedButtons.ActualWidth;
+			flippedRight = flippedRight < 0 ? 0 : flippedRight;
+			double flippedUp = Top - offset.Y - Root.StackedButtons.ActualHeight - Root.TargetArea.Height;
+			flippedUp = flippedUp < 0 ? 0 : flippedUp;
+
 			if(!isFlippingRight && !isFlippingUp)
-				Root.StackedButtons.Margin = new Thickness(0, Top + offset.Y, Right + offset.X, 0);
+				Root.StackedButtons.Margin = new Thickness(0, Top + offset.Y, Right - offset.X, 0);
 			else if(isFlippingRight && !isFlippingUp)
 			{
-				Root.StackedButtons.Margin = new Thickness(0, Top + offset.Y, Right - offset.X - Root.StackedButtons.Width, 0);
+				Root.StackedButtons.Margin = new Thickness(0, Top + offset.Y, flippedRight, 0);
 			}
 			else if(!isFlippingRight && isFlippingUp)
 			{
-				Root.StackedButtons.Margin = new Thickness(0, Top - offset.Y - Root.StackedButtons.Height, Right + offset.X, 0);
+				Root.StackedButtons.Margin = new Thickness(0, flippedUp, Right - offset.X, 0);
 			}
 			else
 			{
-				Root.StackedButtons.Margin = new Thickness(0, Top - offset.Y - Root.StackedButtons.Height, Right - offset.X - Root.StackedButtons.Width, 0);
+				Root.StackedButtons.Margin = new Thickness(0, flippedUp, flippedRight, 0);
 			}
 		}
 

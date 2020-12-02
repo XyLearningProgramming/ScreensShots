@@ -15,6 +15,7 @@ namespace ScreenShotApp.Utils
 		private static int _hookCount = 0;
 		private static IntPtr _hookHandle = IntPtr.Zero;
 		private static List<(Keys modifier, Keys mainkey)> shortcuts = new List<(Keys modifier, Keys mainkey)>();
+		private static HookProc _myCallback = null;
 		static KeyboardHook()
 		{
 			_hookCount = 0;
@@ -28,7 +29,8 @@ namespace ScreenShotApp.Utils
 				using ProcessModule currentPM = currentProcess.MainModule;
 				if(currentPM != null)
 				{
-					_hookHandle = SetWindowsHookEx_((int)_hookType, HookCallback, GetModuleHandle_(currentPM.ModuleName), 0);
+					_myCallback = HookCallback;
+					_hookHandle = SetWindowsHookEx_((int)_hookType, _myCallback, GetModuleHandle_(currentPM.ModuleName), 0);
 					LogSystemShared.LogWriter.WriteLine("Keyboard hooked successfully.", memberName: membername, sourceFilePath: callerFilePath, sourceLineNumber: lineNum);
 				}
 				else

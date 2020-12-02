@@ -84,7 +84,7 @@ namespace ScreenShotApp
 			// suppose it's correct message 
 			foreach(var sc in System.Windows.Forms.Screen.AllScreens)
 			{
-				var infoModel = new ScreenInfoModel() { Resolution = UserSettingsStruct.ScreenResolutionInferrer.GetInferredResolution(sc) };
+				var infoModel = new ScreenInfoModel() { DeviceName=sc.DeviceName, Resolution = UserSettingsStruct.ScreenResolutionInferrer.GetInferredResolution(sc) };
 				UserSettingsManager.Instance.SetPreferredResolution(sc.DeviceName, infoModel);
 			}
 

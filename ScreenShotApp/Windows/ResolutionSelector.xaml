@@ -21,7 +21,7 @@
 			<RowDefinition Height="Auto"></RowDefinition>
 		</Grid.RowDefinitions>
 		<StackPanel Margin="30,20,20,0">
-			<TextBlock ForceCursor="{DynamicResource Element.Foreground.Medium}" Text="Select Correct Resolution for Your Monitor: " FontWeight="SemiBold" Margin="0,0,0,20"
+			<TextBlock Foreground="{DynamicResource Element.Foreground.Medium}" Text="Select Correct Resolution for Your Monitor: " FontWeight="SemiBold" Margin="0,0,0,20"
 			FontSize="16"></TextBlock>
 			<Border BorderBrush="{DynamicResource Brush.Button.Border}" BorderThickness="4">
 				<Grid>

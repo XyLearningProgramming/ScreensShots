@@ -3,6 +3,10 @@
                     xmlns:local="clr-namespace:ScreenShotWindows"
 					xmlns:lconv="clr-namespace:ScreenShotWindows.Utils.Coverters"
 					xmlns:ctrl="clr-namespace:ScreenShotWindows.Controls">
+
+	<ResourceDictionary.MergedDictionaries>
+		<ResourceDictionary Source="pack://application:,,,/ScreenShotWindows;component/Themes/ToolbarIcons.xaml"></ResourceDictionary>
+	</ResourceDictionary.MergedDictionaries>
 	<!--TODO: make this changeable via struct sending in when construct screenshot window-->
 	<!--4*16% opacity in blend with black color-->
 	<Color x:Key="DarkOpacityColor">#40000000</Color>
@@ -56,6 +60,117 @@
 		</Style.Triggers>-->
 	</Style>
 
+	<!--StackedButtons Style-->
+	<Style TargetType="{x:Type Separator}" BasedOn="{StaticResource {x:Type Separator}}">
+		<Setter Property="Margin" Value="2,0,2,0"/>
+		<Setter Property="LayoutTransform">
+			<Setter.Value>
+				<TransformGroup>
+					<TransformGroup.Children>
+						<TransformCollection>
+							<RotateTransform Angle="90"/>
+						</TransformCollection>
+					</TransformGroup.Children>
+				</TransformGroup>
+			</Setter.Value>
+		</Setter>
+	</Style>
+
+	<Style TargetType="{x:Type Button}" BasedOn="{StaticResource {x:Type Button}}">
+		<Setter Property="Foreground" Value="White"/>
+		<Setter Property="Background" Value="#FF323232"/>
+		<Setter Property="BorderBrush" Value="#FF545454"/>
+		<Setter Property="BorderThickness" Value="1"/>
+		<Setter Property="SnapsToDevicePixels" Value="True"/>
+		<Setter Property="HorizontalContentAlignment" Value="Center"/>
+		<Setter Property="VerticalContentAlignment" Value="Center"/>
+		<Setter Property="FocusVisualStyle" Value="{x:Null}"/>
+
+		<Setter Property="Template">
+			<Setter.Value>
+				<ControlTemplate TargetType="{x:Type Button}">
+					<Border x:Name="MainBorder" BorderBrush="{TemplateBinding BorderBrush}" Height="{TemplateBinding Height}" Width="{TemplateBinding Width}" BorderThickness="{TemplateBinding BorderThickness}" MinHeight="{TemplateBinding MinHeight}" Background="{TemplateBinding Background}">
+						<Border x:Name="InnerBorder" Background="Transparent">
+							<ContentPresenter></ContentPresenter>
+						</Border>
+					</Border>
+					<ControlTemplate.Triggers>
+						<Trigger Property="IsKeyboardFocused" Value="True">
+							<Setter TargetName="MainBorder" Property="Margin" Value="-1"/>
+							<Setter TargetName="InnerBorder" Property="Background" Value="#AA373E42"/>
+						</Trigger>
+					</ControlTemplate.Triggers>
+				</ControlTemplate>
+			</Setter.Value>
+		</Setter>
+
+		<Style.Triggers>
+			<Trigger Property="IsMouseOver" Value="True">
+				<Setter Property="Background" Value="#AA34373B"/>
+				<Setter Property="BorderBrush" Value="#FF37404D"/>
+			</Trigger>
+			<Trigger Property="IsPressed" Value="True">
+				<Setter Property="Background" Value="#F02A313B"/>
+				<Setter Property="BorderBrush" Value="#FF113854"/>
+			</Trigger>
+			<Trigger Property="IsKeyboardFocused" Value="True">
+				<Setter Property="FocusVisualStyle" Value="{x:Null}"/>
+				<Setter Property="BorderThickness" Value="1.5"/>
+				<Setter Property="BorderBrush" Value="#FF113E54"/>
+			</Trigger>
+			<Trigger Property="IsEnabled" Value="False">
+				<Setter Property="Opacity" Value="0.7"/>
+			</Trigger>
+		</Style.Triggers>
+	</Style>
+
+	<Style TargetType="{x:Type ToggleButton}" BasedOn="{StaticResource {x:Type ToggleButton}}">
+		<Setter Property="Foreground" Value="White"/>
+		<Setter Property="Background" Value="#FF323232"/>
+		<Setter Property="BorderBrush" Value="#FF545454"/>
+		<Setter Property="BorderThickness" Value="1"/>
+		<Setter Property="SnapsToDevicePixels" Value="True"/>
+		<Setter Property="HorizontalContentAlignment" Value="Center"/>
+		<Setter Property="VerticalContentAlignment" Value="Center"/>
+		<Setter Property="FocusVisualStyle" Value="{x:Null}"/>
+
+		<Setter Property="Template">
+			<Setter.Value>
+				<ControlTemplate TargetType="{x:Type ToggleButton}">
+					<Border x:Name="MainBorder" BorderBrush="{TemplateBinding BorderBrush}" Height="{TemplateBinding Height}" Width="{TemplateBinding Width}" BorderThickness="{TemplateBinding BorderThickness}" MinHeight="{TemplateBinding MinHeight}" Background="{TemplateBinding Background}">
+						<Border x:Name="InnerBorder" Background="Transparent">
+							<ContentPresenter></ContentPresenter>
+						</Border>
+					</Border>
+					<ControlTemplate.Triggers>
+						<Trigger Property="IsKeyboardFocused" Value="True">
+							<Setter TargetName="MainBorder" Property="Margin" Value="-1"/>
+							<Setter TargetName="InnerBorder" Property="Background" Value="#AA373E42"/>
+						</Trigger>
+					</ControlTemplate.Triggers>
+				</ControlTemplate>
+			</Setter.Value>
+		</Setter>
+
+		<Style.Triggers>
+			<Trigger Property="IsMouseOver" Value="True">
+				<Setter Property="Background" Value="#AA34373B"/>
+				<Setter Property="BorderBrush" Value="#FF37404D"/>
+			</Trigger>
+			<Trigger Property="IsPressed" Value="True">
+				<Setter Property="Background" Value="#F02A313B"/>
+				<Setter Property="BorderBrush" Value="#FF113854"/>
+			</Trigger>
+			<Trigger Property="IsKeyboardFocused" Value="True">
+				<Setter Property="FocusVisualStyle" Value="{x:Null}"/>
+				<Setter Property="BorderThickness" Value="1.5"/>
+				<Setter Property="BorderBrush" Value="#FF113E54"/>
+			</Trigger>
+			<Trigger Property="IsEnabled" Value="False">
+				<Setter Property="Opacity" Value="0.7"/>
+			</Trigger>
+		</Style.Triggers>
+	</Style>
 
 	<lconv:ScreenWindowStatusIsSelectingToColllapseVisibility x:Key="ScreenWindowStatusIsSelectingToColllapseVisibility"></lconv:ScreenWindowStatusIsSelectingToColllapseVisibility>
 	<lconv:SizeToStringConverter x:Key="SizeToStringConverter"></lconv:SizeToStringConverter>
@@ -109,7 +224,33 @@
 								</local:GridWithSolidLines>
 								<!--Buttons on the second row-->
 							</Border>
-							<local:StackedButtonsUserControl x:Name="PART_StackedButtons"></local:StackedButtonsUserControl>
+							<Grid x:Name="PART_StackedButtons" IsHitTestVisible="True" HorizontalAlignment="Right" VerticalAlignment="Top">
+								<StackPanel Orientation="Horizontal" Background="#FF323232" SnapsToDevicePixels="True" HorizontalAlignment="Right" VerticalAlignment="Center" Margin="2">
+									<ctrl:PixIntegerBox x:Name="PART_pib_Width" Minimum="{Binding MinIntegerBoxInput, Mode=OneTime}" Maximum="{Binding MaxIntegerBoxInput, Mode=OneTime}" 
+										ToolTip="Width" ToolTipService.Placement="Bottom" DefaultValueIfEmpty="100"
+										Value="{Binding InputWidthValue, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"></ctrl:PixIntegerBox>
+									<TextBlock Foreground="White" VerticalAlignment="Center"> X</TextBlock>
+									<ctrl:PixIntegerBox x:Name="PART_pib_Height" Minimum="{Binding MinIntegerBoxInput, Mode=OneTime}" Maximum="{Binding MaxIntegerBoxInput, Mode=OneTime}" 
+										ToolTip="Height" ToolTipService.Placement="Bottom" DefaultValueIfEmpty="100"
+										Value="{Binding InputHeightValue, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"></ctrl:PixIntegerBox>
+									<Separator/>
+									<ToggleButton BorderThickness="5" BorderBrush="Transparent" IsChecked="{Binding IsPreviewShowingReferenceLines}">
+										<Border Width="12" Height="12" Background="{StaticResource appbar_tiles_nine}" ToolTip="Show Grid" ToolTipService.Placement="Bottom"
+											VerticalAlignment="Center" HorizontalAlignment="Center"></Border>
+									</ToggleButton>
+									<Separator />
+									<Button BorderThickness="0" Command="{Binding ScreenShotWindowsCommands.SaveAsClickedCommand}">
+										<Border Background="{StaticResource appbar_save}" Width="12" Height="12" Margin="5"></Border>
+									</Button>
+									<Separator />
+									<Button BorderThickness="0" Command="{Binding ScreenShotWindowsCommands.TargetAreaNoClickedCommand}">
+										<Border Background="{StaticResource appbar_close_Inner}" Width="12" Height="12" Margin="5"></Border>
+									</Button>
+									<Button BorderThickness="0" Command="{Binding ScreenShotWindowsCommands.TargetAreaYesClickedCommand}">
+										<Border Background="{StaticResource appbar_check_Inner}" Width="12" Height="12" Margin="5"></Border>
+									</Button>
+								</StackPanel>
+							</Grid>
 
 							<!--Magnifier-->
 							<Border x:Name="PART_Magnifier" IsHitTestVisible="False"
