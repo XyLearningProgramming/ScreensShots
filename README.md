@@ -1,12 +1,12 @@
-<p align="center"> ![SSIcon](./MainPageImages/SSIcon_1.png) # ScreensShots</p>
+![SSIcon](./MainPageImages/SSIcon_1.png) # ScreensShots
 
 ###This is a free & open-source tool for taking snapshots of multiple screens/monitors on Windows PC. 
-<p align="center"> ![ScreenShotUIDemo](./MainPageImages/ScreenShotUIDemo.png)</p>
+![ScreenShotUIDemo](./MainPageImages/ScreenShotUIDemo.png)
 <p align="center"> <sup>Frame mode that allows you to choose an area on any of your monitors</sup></p>
 
 [中文](README_CN.md)
 
-<p align="center"> **It requires a [.NET Core 3.1](https://dotnet.microsoft.com/download/dotnet-core/3.1) (or above) environment  ** </p>
+**It requires a [.NET Core 3.1](https://dotnet.microsoft.com/download/dotnet-core/3.1) (or above) environment  **
 
 Features:
  - One tool for multiple monitors with different dpi / system UI scales
@@ -20,17 +20,17 @@ How to use it:
 
 Examples:
 
-<p align="center"> ![StartUpPage](./MainPageImages/StartUpPage.png)</p>
-<p align="center"><sup> Start-up Page </sup></p>
+![StartUpPage](./MainPageImages/StartUpPage.png)
+<sup> Start-up Page </sup>
 
-<p align="center"> ![OptionMain](./MainPageImages/OptionMain.png)</p>
-<p align="center"><sup> Options Page </sup></p>
+![OptionMain](./MainPageImages/OptionMain.png)
+<sup> Options Page </sup>
 
-<p align="center"> ![OptionTwo](./MainPageImages/OptionTwo.png)</p>
-<p align="center"><sup> Resolution Detection & Set </sup></p>
+![OptionTwo](./MainPageImages/OptionTwo.png)
+<sup> Resolution Detection & Set </sup>
 
-<p align="center"> ![OptionDarkTheme](./MainPageImages/OptionDarkTheme.png)</p>
-<p align="center"><sup> Dark Theme </sup></p>
+![OptionDarkTheme](./MainPageImages/OptionDarkTheme.png)
+<sup> Dark Theme </sup>
 
 Known Issues:
  - Cannot identify the second monitor correctly if change primary monitor to another one while using "second screen only".
