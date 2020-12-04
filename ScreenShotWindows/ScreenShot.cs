@@ -105,6 +105,12 @@ namespace ScreenShotWindows
 		internal void OnSnapped(System.Windows.Forms.Screen screen, BitmapSource source) => Snapped?.Invoke(this, (screen,source));
 
 		public static event EventHandler<EventArgs> AllClosed;
+
+		/// <summary>
+		/// Called when one of sub windows for each monitor is closed (whether or not have taken a snapshot)
+		/// </summary>
+		/// <param name="isClosingAll">True if in screenshotmode & closing means closing with all other windows</param>
+		/// <param name="sender"></param>
 		internal void OnClose()
 		{
 			windowsCreatedCount--;

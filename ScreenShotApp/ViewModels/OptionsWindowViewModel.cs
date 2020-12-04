@@ -205,6 +205,7 @@ namespace ScreenShotApp.ViewModels
 				if(this.MutateVerbose(ref _currentColorTheme,value, e => PropertyChanged?.Invoke(this, e)))
 				{
 					UserSettingsManager.Instance.ColorThemePrefered = value;
+					Application.Current.Windows.OfType<OptionWindow>().FirstOrDefault().InvalidateVisual();
 				}
 			} }
 

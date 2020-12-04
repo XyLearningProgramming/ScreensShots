@@ -5,10 +5,8 @@ using System.Collections.Generic;
 using System.Text;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
-using System.Windows.Threading;
 using System.Threading;
 using System.Collections.Concurrent;
-using System.Runtime.Serialization;
 
 namespace LogSystemShared
 {

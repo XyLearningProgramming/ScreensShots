@@ -26,20 +26,21 @@ namespace ScreenShotApp.Utils
 		public event PropertyChangedEventHandler PropertyChanged;
 		private void OnPropertyChanged(string propertyName = null) => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
 		// singleton
-		public static UserSettingsManager Instance { get; } = new UserSettingsManager();
+		public static UserSettingsManager Instance { get; } 
 
 		#region constructor
 		static UserSettingsManager()
 		{
-			// not allowing instantiate in design mode
-			if(DesignerProperties.GetIsInDesignMode(new DependencyObject()))
-				return;
+			//// not allowing instantiate in design mode
+			//if(DesignerProperties.GetIsInDesignMode(new DependencyObject()))
+			//	return;
 			LocalPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "settings.xaml");
 			AppDataPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), ThisAppsName, "setttings.xaml");
+			Instance = new UserSettingsManager();
 		}
 		public UserSettingsManager()
 		{
-			// load settings TODO
+			// load settings
 			if(!string.IsNullOrWhiteSpace(AppDataPath) && !File.Exists(AppDataPath))
 				Directory.CreateDirectory(new FileInfo(AppDataPath).DirectoryName);
 
@@ -54,10 +55,6 @@ namespace ScreenShotApp.Utils
 
 		#region fields
 		private ResourceDictionary loadedSettings;
-		#endregion
-
-		#region methods
-
 		#endregion
 
 		#region properties
@@ -244,7 +241,7 @@ namespace ScreenShotApp.Utils
 
 		public ScreenInfoModel GetPreferredResolution(string deviceName)
 		{
-			var strArr = GetValue("", deviceName).Split("*");
+			var strArr = GetValue("", deviceName.RemoveNonLetters()).Split("*");
 			if(strArr.Length == 2)
 			{
 				try
@@ -263,11 +260,11 @@ namespace ScreenShotApp.Utils
 			if(screenInfoModel != null)
 			{
 				// set current res in dict
-				var screen = System.Windows.Forms.Screen.AllScreens.Where(s => s.DeviceName == screenInfoModel.DeviceName).FirstOrDefault();
+				var screen = System.Windows.Forms.Screen.AllScreens.Where(s => s.DeviceName.RemoveNonLetters() == screenInfoModel.DeviceName.RemoveNonLetters()).FirstOrDefault();
 				if(screen != null)
 				{
 					ScreenResolutionInferrer.ForceChangeStoredResolution(screen, screenInfoModel.Resolution.width, screenInfoModel.Resolution.height);
-					return SetValue($"{screenInfoModel.Resolution.width}*{screenInfoModel.Resolution.height}", deviceName);
+					return SetValue($"{screenInfoModel.Resolution.width}*{screenInfoModel.Resolution.height}", deviceName.RemoveNonLetters());
 				}
 				Debug.Assert(screen != null); // how?
 			}

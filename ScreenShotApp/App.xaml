@@ -17,7 +17,7 @@
 				<ResourceDictionary Source="pack://application:,,,/ScreenShotApp;component/Themes/Colors/DarkColorTheme.xaml"></ResourceDictionary>
 				<!--Icon path-->
 				<ResourceDictionary Source="pack://application:,,,/ScreenShotApp;component/Themes/Icons.xaml"></ResourceDictionary>
-
+				<ResourceDictionary Source="pack://application:,,,/ScreenShotApp;component/Themes/Icons_Dark.xaml"></ResourceDictionary>
 				<ResourceDictionary>
 					<!--View models' instances-->
 					<vm:RootViewModel x:Key="RootViewModel"></vm:RootViewModel>

@@ -3,8 +3,8 @@
                     xmlns:s="clr-namespace:System;assembly=mscorlib"
                     >
 	<s:Double x:Key="Element.Opacity">0.8</s:Double>
-
-	<SolidColorBrush x:Key="IconDefaultBrush" Color="#FF202020"></SolidColorBrush>
+	<!--<Color x:Key="IconDefaultColor" R="32" G="32" B="32" A="0"></Color>-->
+	<!--<SolidColorBrush x:Key="IconDefaultBrush" Color="#FF202020"></SolidColorBrush>-->
 	<!-- Element.Foreground 
     Element.Foreground.Gray112(keygesture)
     Brush.Button.Background 

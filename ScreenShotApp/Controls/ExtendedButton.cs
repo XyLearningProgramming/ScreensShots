@@ -1,21 +1,12 @@
-﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Text;
+﻿using System.ComponentModel;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
 using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
 
 namespace ScreenShotApp.Controls
 {
 	/// <summary>
-    /// Extended button can hold both a icon(brush) and text with specified size.
+	/// Extended button can hold both a icon(brush) and text with specified size.
 	/// This is adpated from Nick Manarin's ScreenToGif style controls
 	/// https://github.com/NickeManarin/ScreenToGif/tree/master/ScreenToGif
 	/// </summary>

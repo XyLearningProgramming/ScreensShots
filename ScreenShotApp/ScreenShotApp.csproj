@@ -6,10 +6,18 @@
     <UseWPF>true</UseWPF>
     <ApplicationManifest>app.manifest</ApplicationManifest>
     <ApplicationIcon>Icon_32_32.ico</ApplicationIcon>
+    <Nullable>warnings</Nullable>
+    <Authors>XyHuang</Authors>
+    <Description>A tool for taking screenshots on multiple monitors.</Description>
+    <PackageIcon>SSIcon_1.png</PackageIcon>
   </PropertyGroup>
 
   <ItemGroup>
     <None Remove="Resources\Icon_32_32.ico" />
+    <None Include="..\MainPageImages\SSIcon_1.png">
+      <Pack>True</Pack>
+      <PackagePath></PackagePath>
+    </None>
   </ItemGroup>
 
   <ItemGroup>
@@ -22,6 +30,13 @@
 
   <ItemGroup>
     <Resource Include="Resources\Icon_32_32.ico" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Page Update="Themes\Icons_Dark.xaml">
+      <XamlRuntime>$(DefaultXamlRuntime)</XamlRuntime>
+      <SubType>Designer</SubType>
+    </Page>
   </ItemGroup>
 
 </Project>

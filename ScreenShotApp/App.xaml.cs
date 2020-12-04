@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Configuration;
 using System.Data;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
@@ -17,6 +18,11 @@ namespace ScreenShotApp
 	/// </summary>
 	public partial class App : Application
 	{
+		#region fields
+		private Mutex _mutex; // prevent multiple instances
+		private const string _mutexName = "ScreensShotsMutex";
+		#endregion
+
 		#region properties
 		// reference to the rootviewmodel instance
 		public static RootViewModel Root => App.Current.TryFindResource("RootViewModel") as RootViewModel;
@@ -52,8 +58,20 @@ namespace ScreenShotApp
 		#endregion
 
 		#region app start and close callbacks
+		
 		private void Application_Startup(object sender, StartupEventArgs e)
 		{
+			// simply prevent multiple instances
+			// TODO: the only window magnify when trying to create multiple instances
+			_mutex = new Mutex(true, "Global\\"+_mutexName, out bool _isAcquired);
+			if(!_isAcquired)
+			{
+				// shutdown 
+				MessageBox.Show("Multiple instances mode is currently unavailable.");
+				ExitApplicationCommand.Execute(null);
+				return;
+			}
+
 			LogSystemShared.LogWriter.WriteLine(Environment.NewLine, verbose: false);
 			LogSystemShared.LogWriter.WriteLine("App started", verbose: false);
 			LogSystemShared.LogWriter.WriteLine(Environment.NewLine, verbose: false);

@@ -5,8 +5,8 @@
 
 	<s:Double x:Key="Element.Opacity">0.8</s:Double>
 
-	<SolidColorBrush x:Key="IconDefaultBrush" Color="White"></SolidColorBrush>
-
+	<!--<SolidColorBrush x:Key="IconDefaultBrush" Color="#FFE8E8E8"></SolidColorBrush>-->
+	<!--<Color x:Key="IconDefaultColor">White</Color>-->
 	<!--Colors-->
 	<SolidColorBrush x:Key="Panel.Background" Color="#FF202020"/>
 	<SolidColorBrush x:Key="Panel.Background.Level2" Color="#FF262626"/>

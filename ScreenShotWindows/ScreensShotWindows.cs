@@ -317,6 +317,7 @@ namespace ScreenShotWindows
 			Image image = new Image() { Source = _desktopSnapShot, Width= _currentScreen.Bounds.Width, Height = _currentScreen.Bounds.Height };
 			RenderOptions.SetBitmapScalingMode(image, BitmapScalingMode.Fant);
 			LogWriter.WriteLine($"Reflected image size: width {Convert.ToInt32(image.Source.Width)}, height {Convert.ToInt32(image.Source.Height)}");
+
 			Canvas.Children.Add(image); // canvas is transparent now
 
 			ScaleFactor = image.Source.Width * 1.0 / _currentScreen.Bounds.Width;
@@ -523,7 +524,7 @@ namespace ScreenShotWindows
 				}
 			}
 			container.InvalidateVisual();
-			LogWriter.WriteLine($"Generated dots: {_referenceRectsInContainer.Count}");
+			// LogWriter.WriteLine($"Generated dots: {_referenceRectsInContainer.Count}");
 		}
 
 		#region interaction by mouse and keyboard
@@ -533,7 +534,7 @@ namespace ScreenShotWindows
 			if(e.Key == Key.Escape)
 			{
 				e.Handled = true;
-				Close();
+				ControllerQuit();
 			}
 			if(WindowStatus == ScreenShotWindowStatus.IsSelecting)
 			{
@@ -647,7 +648,7 @@ namespace ScreenShotWindows
 				// double right click means quit
 				if(WindowStatus != ScreenShotWindowStatus.IsDrawing)
 				{
-					this.Close();
+					ControllerQuit();
 					e.Handled = true;
 					return;
 				}
@@ -759,6 +760,16 @@ namespace ScreenShotWindows
 			}
 		}
 
+		/// <summary>
+		/// MUST CALL if a close is from keyboard & mouse input
+		/// </summary>
+		private void ControllerQuit()
+		{
+			if(this.WindowStatus != ScreenShotWindowStatus.IsSelecting)
+				this._screenShot.OnTargetAreaSelected(this); // pretend the user made a choice inside this window, this line will cause other windows if any to close too
+			this.Close();
+		}
+
 		private bool IsMouseDeltaTooSmall(Point p1, Point p2)
 		{
 			Vector distance = p1 - p2;
@@ -775,7 +786,7 @@ namespace ScreenShotWindows
 			base.OnPreviewMouseRightButtonUp(e);
 			if(WindowStatus== ScreenShotWindowStatus.Empty)
 			{
-				this.Close();
+				ControllerQuit();
 				e.Handled = true;
 			}
 			else if(WindowStatus == ScreenShotWindowStatus.IsSelecting)

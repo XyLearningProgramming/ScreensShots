@@ -8,15 +8,15 @@ namespace UserSettingsStruct
 {
 	public static class ScreenResolutionInferrer
 	{
-		private static Dictionary<System.Windows.Forms.Screen, (int width, int height)> _inferredScreenResolution = new Dictionary<System.Windows.Forms.Screen, (int width, int height)>();
-		private static Dictionary<System.Windows.Forms.Screen, double> _inferredScales = new Dictionary<System.Windows.Forms.Screen, double>();
+		private static Dictionary<string, (int width, int height)> _inferredScreenResolution = new Dictionary<string, (int width, int height)>();
+		private static Dictionary<string, double> _inferredScales = new Dictionary<string, double>();
 		static ScreenResolutionInferrer()
 		{
 			// infer all screens
 			foreach(var screen in System.Windows.Forms.Screen.AllScreens)
 			{
-				_inferredScreenResolution.Add(screen, InferResolution(screen));
-				LogSystemShared.LogWriter.WriteLine($"screen {screen.DeviceName} with inferred width {_inferredScreenResolution[screen].width}, height {_inferredScreenResolution[screen].height}.");
+				_inferredScreenResolution.Add(screen.DeviceName.RemoveNonLetters(), InferResolution(screen));
+				LogSystemShared.LogWriter.WriteLine($"screen {screen.DeviceName.RemoveNonLetters()} with inferred width {_inferredScreenResolution[screen.DeviceName.RemoveNonLetters()].width}, height {_inferredScreenResolution[screen.DeviceName.RemoveNonLetters()].height}.");
 			}
 		}
 
@@ -25,25 +25,26 @@ namespace UserSettingsStruct
 		public static (int width, int height) GetInferredResolution(System.Windows.Forms.Screen screen)
 		{
 			// search in current dictionary
-			if(_inferredScreenResolution.ContainsKey(screen)) return _inferredScreenResolution[screen];
+			if(_inferredScreenResolution.ContainsKey(screen.DeviceName.RemoveNonLetters())) return _inferredScreenResolution[screen.DeviceName.RemoveNonLetters()];
 			throw new Exception("Cannot find designated screen");
 		}
 		public static double GetInferredScale(System.Windows.Forms.Screen screen)
 		{
-			if(_inferredScales.ContainsKey(screen)) return _inferredScales[screen];
+			if(_inferredScales.ContainsKey(screen.DeviceName.RemoveNonLetters())) return _inferredScales[screen.DeviceName.RemoveNonLetters()];
 			throw new Exception("Cannot find designated screen"); 
 		}
 
 		public static void ForceChangeStoredResolution(System.Windows.Forms.Screen screen, int width, int height)
 		{
-			if(_inferredScreenResolution.ContainsKey(screen))
+			if(_inferredScreenResolution.ContainsKey(screen.DeviceName.RemoveNonLetters()))
 			{
-				var former = _inferredScreenResolution[screen];
-				_inferredScreenResolution[screen] = (width, height);
-				_inferredScales[screen] = (width * 1.0)/ screen.Bounds.Width;
+				_inferredScreenResolution[screen.DeviceName.RemoveNonLetters()] = (width, height);
+				_inferredScales[screen.DeviceName.RemoveNonLetters()] = (width * 1.0)/ screen.Bounds.Width;
+
+				LogSystemShared.LogWriter.WriteLine($"Changing screen {screen.DeviceName.RemoveNonLetters()} to width {width}, height {height}.");
 				return;
 			}
-			throw new Exception($"Screen with name {screen.DeviceName} has no presettings. Cannot force set it.");
+			throw new Exception($"Screen with name {screen.DeviceName.RemoveNonLetters()} has no presettings. Cannot force set it.");
 		}
 
 		private static double GetScaleFactorFromScreen(System.Windows.Forms.Screen screen)
@@ -54,7 +55,7 @@ namespace UserSettingsStruct
 			{
 				case _S_OK:
 					var scale = (int)dpiX / 96.0;
-					_inferredScales.Add(screen, scale);
+					_inferredScales.Add(screen.DeviceName.RemoveNonLetters(), scale);
 					return scale;
 				case _E_INVALIDARG:
 					throw new ArgumentException("Unknown error. See https://msdn.microsoft.com/en-us/library/windows/desktop/dn280510.aspx for more information.");
@@ -65,7 +66,7 @@ namespace UserSettingsStruct
 
 		public static bool IsUsingDifferentDpi(System.Windows.Forms.Screen screen)
 		{
-			return (screen.Bounds.Width, screen.Bounds.Height) != _inferredScreenResolution[screen];
+			return (screen.Bounds.Width, screen.Bounds.Height) != _inferredScreenResolution[screen.DeviceName.RemoveNonLetters()];
 		}
 
 		private static (int width, int height) InferResolution(System.Windows.Forms.Screen screen)
@@ -123,5 +124,15 @@ namespace UserSettingsStruct
 			[16 / 9.0] = "16:9",
 			[21 / 9.0] = "21:9",
 		};
+	}
+	public static class StringExt 
+	{
+		public static string RemoveNonLetters(this string input)
+		{
+			return new string((from c in input
+						where char.IsWhiteSpace(c) || char.IsLetterOrDigit(c)
+						select c
+				).ToArray());
+		}
 	}
 }
