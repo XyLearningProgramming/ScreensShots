@@ -49,7 +49,7 @@ namespace ScreenShotApp.Utils
 
 
 			//UserSettingsManager.Instance.ColorThemePrefered = theme.ToString();
-			LogSystemShared.LogWriter.WriteLine($"Switched Theme to {theme}");
+			//LogSystemShared.LogWriter.WriteLine($"Switched Theme to {theme}");
 		}
 
 	}

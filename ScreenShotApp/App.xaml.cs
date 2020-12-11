@@ -88,7 +88,7 @@ namespace ScreenShotApp
 			KeyboardHook.StartHook(HookedCaptureShortcut.modifiers, HookedCaptureShortcut.mainkey);
 			KeyboardHook.KeyboardPressed += KeyboardShortcutsCallback;
 
-			LogSystemShared.LogWriter.WriteLine("App on startup called.");
+			// LogSystemShared.LogWriter.WriteLine("App on startup called.");
 
 			Root.OpenStartupWindow.Execute(null);
 		}
@@ -108,7 +108,7 @@ namespace ScreenShotApp
 
 			// save usersettings when exit
 			UserSettingsManager.Instance.SaveAll();
-			LogSystemShared.LogWriter.WriteLine("App on exit called.");
+			// LogSystemShared.LogWriter.WriteLine("App on exit called.");
 			LogSystemShared.LogWriter.PurgeAll();
 		}
 		#endregion

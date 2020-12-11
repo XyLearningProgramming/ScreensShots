@@ -16,8 +16,8 @@
 		</ResourceDictionary>
 		<ResourceDictionary Source="pack://application:,,,/ScreenShotApp;component/Themes/IntegerBox.xaml">
 		</ResourceDictionary>
-		<ResourceDictionary>
-			<Style x:Key="Style.FocusVisual.NoMargin">
+	</ResourceDictionary.MergedDictionaries>
+	<Style x:Key="Style.FocusVisual.NoMargin">
 				<Setter Property="Control.Template">
 					<Setter.Value>
 						<ControlTemplate>
@@ -400,7 +400,4 @@
 					</Setter.Value>
 				</Setter>
 			</Style>
-
-		</ResourceDictionary>
-	</ResourceDictionary.MergedDictionaries>
 </ResourceDictionary>

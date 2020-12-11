@@ -11,8 +11,8 @@
 		<ResourceDictionary>
 			<ResourceDictionary.MergedDictionaries>
 				<!--Load styles-->
-				<ResourceDictionary Source="pack://application:,,,/ScreenShotWindows;component/Themes/Generic.xaml"></ResourceDictionary>
 				<ResourceDictionary Source="pack://application:,,,/ScreenShotApp;component/Themes/Generic.xaml"></ResourceDictionary>
+				<ResourceDictionary Source="pack://application:,,,/ScreenShotWindows;component/Themes/Generic.xaml"></ResourceDictionary>
 				<ResourceDictionary Source="pack://application:,,,/ScreenShotApp;component/Themes/Colors/DefaultColorTheme.xaml"></ResourceDictionary>
 				<ResourceDictionary Source="pack://application:,,,/ScreenShotApp;component/Themes/Colors/DarkColorTheme.xaml"></ResourceDictionary>
 				<!--Icon path-->

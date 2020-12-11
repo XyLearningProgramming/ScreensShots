@@ -117,7 +117,7 @@ namespace ScreenShotWindows
 			if(windowsCreatedCount == 0)
 			{
 				AllClosed?.Invoke(this, new EventArgs());
-				LogSystemShared.LogWriter.WriteLine("All closed event called");
+				// LogSystemShared.LogWriter.WriteLine("All closed event called");
 			}
 		}
 

@@ -128,7 +128,7 @@ namespace ScreenShotWindows
 			{
 				if(this.Mutate(ref _inputWidthValue, value, e => PropertyChanged?.Invoke(this, e)))
 				{
-					var param = new TryChangeTargetAreaCommandParameter() { intendedWidth = InputWidthBox.Value, intendedHeight = InputHeightBox.Value };
+					var param = new TryChangeTargetAreaCommandParameter() { intendedWidth = value, intendedHeight = InputHeightBox.Value };
 					ScreenShotWindowsCommands.TryChangeTargetAreaSize.TryExecute(param);
 				}
 			}
@@ -141,7 +141,7 @@ namespace ScreenShotWindows
 			{ 
 				if(this.Mutate(ref _inputHeightValue, value, e => PropertyChanged?.Invoke(this, e)))
 				{
-					var param = new TryChangeTargetAreaCommandParameter() { intendedWidth = InputWidthBox.Value, intendedHeight = InputHeightBox.Value };
+					var param = new TryChangeTargetAreaCommandParameter() { intendedWidth = InputWidthBox.Value, intendedHeight = value };
 					ScreenShotWindowsCommands.TryChangeTargetAreaSize.TryExecute(param);
 				}
 			}
@@ -357,7 +357,8 @@ namespace ScreenShotWindows
 				rect = GetRectAfterScaling(rect);
 				try
 				{
-					CroppedBitmap image = new CroppedBitmap(_desktopSnapShot, new Int32Rect(rect.Left, rect.Top, rect.Width, rect.Height));
+					//CroppedBitmap image = new CroppedBitmap(_desktopSnapShot, new Int32Rect(rect.Left, rect.Top, rect.Width, rect.Height));
+					CroppedBitmap image = new CroppedBitmap(_desktopSnapShot, new Int32Rect(rect.Left, rect.Top, InputWidthValue, InputHeightValue));
 					image.SaveToLocal(AbsoluteDirectory: _userSettings.ImageFolderPath, extension: "." + _userSettings.SaveFormatPreferred);
 					Clipboard.SetImage(image);
 				}
